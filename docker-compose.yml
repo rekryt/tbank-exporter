@@ -8,8 +8,6 @@ services:
             - web
         env_file:
             - ./.env
-        volumes:
-            - ./index.php:/app/index.php
         logging:
             driver: 'json-file'
             options:

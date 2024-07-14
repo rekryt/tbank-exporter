@@ -67,7 +67,6 @@ ADD .docker/php/docker-php-enable-jit.ini /usr/local/etc/php/conf.d/docker-php-e
 
 RUN apt-get clean
 
-COPY ./packages/ /app/packages/
 COPY ./composer.json /app/
 COPY ./index.php /app/
 COPY ./src /app/src/
