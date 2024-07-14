@@ -17,6 +17,10 @@ RUN docker-php-ext-configure pcntl --enable-pcntl \
 RUN pecl install -o -f ev \
   && docker-php-ext-enable ev
 
+# zip
+RUN apt-get install -y libzip-dev zlib1g-dev zip \
+  && docker-php-ext-install zip
+
 RUN rm -rf /var/lib/apt/lists/*
 
 # php.ini
