@@ -49,7 +49,7 @@ docker compose up -d
 
 ### Использование
 Экспортер запустит веб-сервер на порту 8080 и будет экспортировать метрики по адресу /metrics.
-Текущая цена каждого финансового инструмента будет экспортироваться с меткой ticker.
+Текущая цена каждого финансового инструмента будет экспортироваться с меткой ticker
 ```text
 # HELP price price
 # TYPE price gauge
@@ -60,7 +60,7 @@ price{ticker="SBGD"} 190.23
 price{ticker="GAZP"} 320.45
 ```
 
-### Настроить prometheus.yaml
+### Настройка prometheus.yaml
 ```yaml
 # A scrape configuration containing exactly one endpoint to scrape.
 scrape_configs:
