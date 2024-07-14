@@ -3,11 +3,11 @@ FROM php:8.1-cli
 RUN apt-get update
 
 # zip
-RUN apt-get install -y libzip-dev zlib1g-dev zip \
-  && docker-php-ext-install zip
+#RUN apt-get install -y libzip-dev zlib1g-dev zip \
+#  && docker-php-ext-install zip
 
 # git
-RUN apt-get install -y git
+#RUN apt-get install -y git
 
 # composer
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/bin --filename=composer \
@@ -22,13 +22,13 @@ RUN pecl install -o -f ev \
   && docker-php-ext-enable ev
 
 # redis
-RUN pecl install -o -f redis \
-    &&  rm -rf /tmp/pear \
-    &&  docker-php-ext-enable redis
+#RUN pecl install -o -f redis \
+#    &&  rm -rf /tmp/pear \
+#    &&  docker-php-ext-enable redis
 
 # mysqli
-RUN docker-php-ext-install mysqli pdo pdo_mysql \
-	&& docker-php-ext-enable mysqli pdo_mysql
+#RUN docker-php-ext-install mysqli pdo pdo_mysql \
+#	&& docker-php-ext-enable mysqli pdo_mysql
 
 # Install "curl", "libmemcached-dev", "libpq-dev", "libjpeg-dev", "libpng-dev", "libfreetype6-dev", "libssl-dev", "libmcrypt-dev"
 RUN set -eux; \
@@ -50,21 +50,20 @@ RUN set -eux; \
     rm -rf /var/lib/apt/lists/*
 
 # Install the PHP gd library
-RUN set -eux; \
-    docker-php-ext-configure gd \
-            --prefix=/usr \
-            --with-jpeg \
-            --with-webp \
-            --with-xpm \
-            --with-freetype; \
-    docker-php-ext-install gd; \
-    php -r 'var_dump(gd_info());'
+#RUN set -eux; \
+#    docker-php-ext-configure gd \
+#            --prefix=/usr \
+#            --with-jpeg \
+#            --with-webp \
+#            --with-xpm \
+#            --with-freetype; \
+#    docker-php-ext-install gd; \
+#    php -r 'var_dump(gd_info());'
 
 # php.ini
 ADD .docker/php/docker-php.ini /usr/local/etc/php/conf.d/docker-php-enable-jit.ini
 ADD .docker/php/docker-php-disable-assertions.ini /usr/local/etc/php/conf.d/docker-php-disable-assertions.ini
 ADD .docker/php/docker-php-enable-jit.ini /usr/local/etc/php/conf.d/docker-php-enable-jit.ini
-ADD .docker/php/docker-php-ext-redis.ini /usr/local/etc/php/conf.d/docker-php-ext-redis.ini
 
 RUN apt-get clean
 
