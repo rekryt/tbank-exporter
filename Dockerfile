@@ -7,7 +7,7 @@ RUN apt-get update
 #  && docker-php-ext-install zip
 
 # git
-#RUN apt-get install -y git
+RUN apt-get install -y git
 
 # composer
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/bin --filename=composer \
