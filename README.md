@@ -64,7 +64,7 @@ price{ticker="GAZP"} 320.45
 ```yaml
 # A scrape configuration containing exactly one endpoint to scrape.
 scrape_configs:
-  - job_name: 'TBank'
+  - job_name: 'tbank'
     scrape_interval: 5s
     honor_labels: true
     static_configs:
