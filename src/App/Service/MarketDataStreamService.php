@@ -12,88 +12,32 @@ use Amp\Websocket\Client\WebsocketConnection;
 use Amp\Websocket\Client\WebsocketHandshake;
 use Amp\Websocket\Parser\Rfc6455ParserFactory;
 use Amp\Websocket\PeriodicHeartbeatQueue;
+use Amp\Websocket\WebsocketClosedException;
 use Closure;
 use Monolog\Logger;
 use Revolt\EventLoop;
-use TBank\Infrastructure\Storage\Storage;
+use TBank\Infrastructure\Storage\InstrumentsStorage;
 use function Amp\async;
 use function Amp\delay;
 use function TBank\getEnv;
 
-class MarketDataStreamService {
+class MarketDataStreamService extends AbstractStreamService {
     private string $path = '/tinkoff.public.invest.api.contract.v1.MarketDataStreamService/MarketDataStream';
-
-    private Rfc6455Connector $wsClient;
-    private string $token;
-    private WebsocketConnection $connection;
     private Closure $onConnected;
-    private string $listener = '';
 
     /**
      * @param Logger $logger
-     * @param ?Closure $onConnected
+     * @param array $tickers
      */
-    public function __construct(private readonly Logger $logger, Closure $onConnected = null) {
-        $this->wsClient = new Rfc6455Connector(
-            new Rfc6455ConnectionFactory(
-                heartbeatQueue: new PeriodicHeartbeatQueue(heartbeatPeriod: 30),
-                parserFactory: new Rfc6455ParserFactory(messageSizeLimit: PHP_INT_MAX, frameSizeLimit: PHP_INT_MAX)
-            )
-        );
-        $this->token = getEnv('API_TOKEN') ?? '';
+    public function __construct(private readonly Logger $logger, private readonly array $tickers = []) {
         $this->onConnected = $onConnected ?? fn() => 0;
-
-        EventLoop::defer($this->connect(...));
-    }
-
-    /**
-     * @throws HttpException
-     * @throws WebsocketConnectException
-     */
-    public function connect(): void {
-        if ($this->listener) {
-            EventLoop::cancel($this->listener);
-        }
-        if (!empty($this->connection) && !$this->connection->isClosed()) {
-            $this->connection->close();
-        }
-
-        $url = (getEnv('API_URL_WS') ?? 'wss://invest-public-api.tinkoff.ru/ws') . $this->path;
-        $this->logger->notice('WS connecting', [$url]);
-        try {
-            $this->connection = $this->wsClient->connect(
-                new WebsocketHandshake($url, [
-                    'Web-Socket-Protocol' => 'json',
-                    'Authorization' => 'Bearer ' . $this->token,
-                ])
-            );
-            $this->logger->info('WS connected', [$url]);
-            $this->connection->onClose(function () {
-                $this->logger->notice('WS connection closed', []);
-                EventLoop::delay(5, fn() => $this->connect());
-            });
-
-            ($this->onConnected)();
-
-        } catch (SocketException $e) {
-            $this->logger->notice('WS connection socket error', []);
-            EventLoop::delay(5, fn() => $this->connect());
-        }
-
-        //        $this->subscribeLastPriceRequest([
-        //            '962e2a95-02a9-4171-abd7-aa198dbe643a',
-        //            '81a9e64b-e9bc-4bb4-8940-1ae2d22e3745',
-        //            'b91e5a2b-d8a1-4a42-b73e-45152b34edd7',
-        //            '4c466956-d2ce-4a95-abb4-17947a65f18a',
-        //            'd285d62a-d618-492a-861f-b4a122ef0475',
-        //        ]);
-
-        $this->listener = EventLoop::defer(function () {
-            while ($message = $this->connection->receive()) {
-                $storage = Storage::getInstance();
-                $payload = json_decode($message->buffer());
-                $this->logger->info('WS Received', [$payload]);
-
+        parent::__construct(
+            $this->logger,
+            function () {
+                $this->subscribeLastPriceRequest(array_keys($this->tickers));
+            },
+            function (object $payload) {
+                $storage = InstrumentsStorage::getInstance();
                 switch (true) {
                     case isset($payload->ping):
                         $this->connection->sendText(
@@ -115,10 +59,16 @@ class MarketDataStreamService {
                         break;
                 }
             }
-        });
+        );
+        EventLoop::defer(fn() => $this->connect($this->path));
     }
 
-    public function subscribeLastPriceRequest(array $instruments) {
+    /**
+     * @param array $instruments
+     * @return void
+     * @throws WebsocketClosedException
+     */
+    public function subscribeLastPriceRequest(array $instruments): void {
         $body = json_encode([
             'subscribeLastPriceRequest' => [
                 'subscriptionAction' => 'SUBSCRIPTION_ACTION_SUBSCRIBE',

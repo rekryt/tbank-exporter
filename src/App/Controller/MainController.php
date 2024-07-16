@@ -12,12 +12,12 @@ use Monolog\Logger;
 use Revolt\EventLoop;
 use TBank\App\Service\InstrumentsService;
 use TBank\App\Service\MarketDataStreamService;
-use TBank\Infrastructure\Storage\Storage;
+use TBank\Infrastructure\Storage\InstrumentsStorage;
 use function TBank\getEnv;
 use function TBank\dbg;
 
 class MainController {
-    private Storage $storage;
+    private InstrumentsStorage $instruments;
     private array $tickers = [];
 
     /**
@@ -27,7 +27,8 @@ class MainController {
      * @throws HttpException
      */
     public function __construct(private readonly Logger $logger) {
-        $this->storage = Storage::getInstance();
+        // хранилище котировок
+        $this->instruments = InstrumentsStorage::getInstance();
         $instrumentsService = new InstrumentsService($this->logger);
 
         $instruments = explode('|', getEnv('API_TICKERS') ?? '');
@@ -35,27 +36,29 @@ class MainController {
             [$ticker, $figi] = explode(':', $instrument);
             foreach ($instrumentsService->findInstrument($figi ?: $ticker) as $result) {
                 if ($result->figi == $figi) {
-                    $this->tickers[$result->uid] = $ticker;
+                    $this->tickers[$result->uid] = $result;
                 }
             }
         }
 
-        $marketDataStreamService = new MarketDataStreamService($this->logger, function () use (
-            &$marketDataStreamService
-        ) {
-            $marketDataStreamService->subscribeLastPriceRequest(array_keys($this->tickers));
-        });
+        // получение заявок
+        // $ordersService
 
-        $this->logger->info('Main controller ready', [$this->tickers]);
+        // подписка на тикеры
+        $marketDataStreamService = new MarketDataStreamService($this->logger, $this->tickers);
+
+        $this->logger->info('Main controller ready', [array_keys($this->tickers)]);
         // EventLoop::delay(5, fn() => $marketDataStreamService->subscribeLastPriceRequest(array_keys($this->tickers)));
         //dbg($tickers);
     }
 
     private function getBody(): string {
         $result = implode("\n", ['# HELP price price', '# TYPE price gauge']) . "\n";
-        foreach ($this->storage->getData() as $uid => $value) {
-            if (!isset($this->tickers[$uid])) continue;
-            $result .= 'price{ticker="' . $this->tickers[$uid] . '"} ' . $value . "\n";
+        foreach ($this->instruments->getData() as $uid => $value) {
+            if (!isset($this->tickers[$uid])) {
+                continue;
+            }
+            $result .= 'price{ticker="' . $this->tickers[$uid]->ticker . '"} ' . $value . "\n";
         }
         return $result;
     }

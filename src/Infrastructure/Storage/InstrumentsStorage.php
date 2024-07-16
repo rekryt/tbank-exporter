@@ -5,8 +5,8 @@ namespace TBank\Infrastructure\Storage;
 use Revolt\EventLoop;
 use TBank\Infrastructure\API\Server;
 
-final class Storage implements StorageInterface {
-    private static Storage $_instance;
+final class InstrumentsStorage implements StorageInterface {
+    private static InstrumentsStorage $_instance;
 
     /**
      * @var float[]
@@ -26,7 +26,7 @@ final class Storage implements StorageInterface {
         EventLoop::repeat(60, fn() => $this->save());
     }
 
-    public static function getInstance(): Storage {
+    public static function getInstance(): InstrumentsStorage {
         return self::$_instance ??= new self();
     }
 
