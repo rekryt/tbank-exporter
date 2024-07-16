@@ -76,7 +76,8 @@ scrape_configs:
 - [Т-банк](https://www.tbank.ru/)
 - - [Документация по API](https://www.tbank.ru/invest/open-api/)
 - - [Получение токена доступа к T-invest API](https://russianinvestments.github.io/investAPI/token/)
-- - [JSON Websocket получение сообщений](https://russianinvestments.github.io/investAPI/ws/) - gRPC streaming Т-Инвестиции
+- - [REST API получение данных по инструменту](https://russianinvestments.github.io/investAPI/swagger-ui/#/InstrumentsService/InstrumentsService_FindInstrument)
+- - [Websocket API получение сообщений](https://russianinvestments.github.io/investAPI/ws/) - gRPC streaming Т-Инвестиции
 - [Prometheus](https://prometheus.io/)
 - [AMPHP](https://amphp.org/)
 - - [http server](https://github.com/amphp/http-server)
