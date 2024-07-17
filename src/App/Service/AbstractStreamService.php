@@ -26,7 +26,8 @@ abstract class AbstractStreamService {
     private Closure $onConnected;
     private Closure $onMessage;
     private string $listener = '';
-    private string $pinger = '';
+    private string $watchdog = '';
+    private int $lastMessageTime = 0;
 
     /**
      * @param Logger $logger
@@ -54,11 +55,13 @@ abstract class AbstractStreamService {
      * @throws WebsocketConnectException
      */
     public function connect(string $path): void {
+        $this->lastMessageTime = 0;
+
         if ($this->listener) {
             EventLoop::cancel($this->listener);
         }
-        if ($this->pinger) {
-            EventLoop::cancel($this->pinger);
+        if ($this->watchdog) {
+            EventLoop::cancel($this->watchdog);
         }
         if (!empty($this->connection) && !$this->connection->isClosed()) {
             $this->connection->close();
@@ -76,25 +79,34 @@ abstract class AbstractStreamService {
 
             $this->connection->onClose(function () use ($path) {
                 $this->logger->notice('WS connection closed', []);
-                EventLoop::delay(5, fn() => $this->connect($path));
+                if ($this->lastMessageTime > 0) {
+                    EventLoop::delay(5, fn() => $this->connect($path));
+                }
             });
 
+            $this->lastMessageTime = time();
             $this->logger->info('WS connected', [$url]);
             ($this->onConnected)();
         } catch (SocketException $e) {
             $this->logger->notice('WS connection socket error', []);
-            EventLoop::delay(5, fn() => $this->connect($path));
+            EventLoop::delay(1, fn() => $this->connect($path));
         }
 
         $this->listener = EventLoop::defer(function () {
             while ($message = $this->connection->receive()) {
                 $payload = json_decode($message->buffer());
 
+                $this->lastMessageTime = time();
                 $this->logger->info('WS Received', [$payload]);
                 ($this->onMessage)($payload);
             }
         });
 
-        $this->pinger = EventLoop::repeat(15, fn() => $this->connection->ping());
+        $this->watchdog = EventLoop::repeat(5, function () use ($path) {
+            if ($this->lastMessageTime && time() - $this->lastMessageTime > 125) {
+                $this->logger->notice('WS connection watchdog reconnecting', []);
+                EventLoop::defer(fn() => $this->connect($path));
+            }
+        });
     }
 }

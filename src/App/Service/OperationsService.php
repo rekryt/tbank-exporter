@@ -9,6 +9,7 @@ use Amp\ByteStream\BufferException;
 use Amp\ByteStream\StreamException;
 
 use Monolog\Logger;
+use Revolt\EventLoop;
 
 final class OperationsService extends AbstractRestService {
     private string $path = '/rest/tinkoff.public.invest.api.contract.v1.OperationsService/';
@@ -26,8 +27,18 @@ final class OperationsService extends AbstractRestService {
         parent::__construct($this->logger);
 
         $this->operationsStorage = MainStorage::getInstance();
-        $portfolio = $this->getPortfolio($account_id);
-        $this->operationsStorage->set('portfolio', $portfolio);
+        /**
+         * @throws BufferException
+         * @throws StreamException
+         * @throws HttpException
+         */
+        $ordersUpdate = function () use ($account_id) {
+            $portfolio = $this->getPortfolio($account_id);
+            $this->operationsStorage->set('portfolio', $portfolio);
+        };
+        $ordersUpdate();
+        // авто-обновление портфолио и позиций
+        EventLoop::repeat(60, $ordersUpdate);
     }
 
     /**
