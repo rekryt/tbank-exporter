@@ -1,7 +1,7 @@
 {
     "require": {
         "opencck/server": "v1.0.0",
-        "amphp/http-client": "v5.0.1",
+        "amphp/http-client": "v5.1.0",
         "amphp/websocket-client": "v2.0.0",
         "vlucas/phpdotenv": "^5.5",
         "ext-mbstring": "*"
