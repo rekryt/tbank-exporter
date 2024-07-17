@@ -96,6 +96,9 @@ scrape_configs:
 ```
 где "tbank-exporter-app-1" сетевой адрес сервиса
 
+### Настройка grafana
+В корне проекта есть [пример JSON модели](grafana.json) dashboard-а.
+
 ### Полезные ссылки
 - [Т-банк](https://www.tbank.ru/)
 - - [Документация по API](https://www.tbank.ru/invest/open-api/)
