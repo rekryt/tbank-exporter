@@ -63,10 +63,10 @@ price{ticker="SBGD"} 21.105
 price{ticker="TMOS"} 6.27
 # HELP order_counts order_counts
 # TYPE order_counts gauge
-order_counts{ticker="GOLD"} 1.7645
+order_counts{ticker="GOLD"} 1
 # HELP order_totals order_totals
 # TYPE order_totals gauge
-order_totals{ticker="GOLD"} 1
+order_totals{ticker="GOLD"} 1.7645
 # HELP portfolio portfolio
 # TYPE portfolio gauge
 portfolio{label="totalAmountShares"} 1547.2695
