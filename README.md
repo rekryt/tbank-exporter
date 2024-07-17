@@ -53,11 +53,35 @@ docker compose up -d
 ```text
 # HELP price price
 # TYPE price gauge
-price{ticker="GOLD"} 150.34
-price{ticker="AKGD"} 2729.34
-price{ticker="TGLD"} 3452.34
-price{ticker="SBGD"} 190.23
-price{ticker="GAZP"} 320.45
+price{ticker="GAZP"} 125.23
+price{ticker="XAU"} 2474.34
+price{ticker="GOLD"} 1.7645
+price{ticker="TGLD"} 8.89
+price{ticker="AKGD"} 160.74
+price{ticker="GLDRUB_TOM"} 6982.4
+price{ticker="SBGD"} 21.105
+price{ticker="TMOS"} 6.27
+# HELP order_counts order_counts
+# TYPE order_counts gauge
+order_counts{ticker="GOLD"} 1.7645
+# HELP order_totals order_totals
+# TYPE order_totals gauge
+order_totals{ticker="GOLD"} 1
+# HELP portfolio portfolio
+# TYPE portfolio gauge
+portfolio{label="totalAmountShares"} 1547.2695
+portfolio{label="totalAmountBonds"} 0
+portfolio{label="totalAmountEtf"} 1.7645
+portfolio{label="totalAmountCurrencies"} 9708.12
+portfolio{label="expectedYield"} -15513.6
+# HELP positions_count positions_count
+# TYPE positions_count gauge
+positions_count{ticker="GOLD"} 1
+positions_count{ticker="RUB000UTSTOM"} 9708.12
+# HELP positions_price positions_price
+# TYPE positions_price gauge
+positions_price{ticker="GOLD"} 1.7645
+positions_price{ticker="RUB000UTSTOM"} 1
 ```
 
 ### Настройка prometheus.yaml
