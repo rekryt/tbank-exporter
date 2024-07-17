@@ -26,20 +26,24 @@ final class InstrumentsStorage implements StorageInterface {
         EventLoop::repeat(60, fn() => $this->save());
     }
 
+    /**
+     * @return InstrumentsStorage
+     */
     public static function getInstance(): InstrumentsStorage {
         return self::$_instance ??= new self();
     }
 
     private function save(): void {
-        Server::getLogger()->notice('Background saving');
+        $logger = Server::getLogger()->withName('InstrumentsStorage');
+        $logger->notice('Background saving');
         file_put_contents(PATH_ROOT . '/' . $this->filename, json_encode($this->data));
     }
 
-    public function get(string $key): float {
+    public function get(string $key): mixed {
         return $this->data[$key];
     }
 
-    public function set(string $key, float $value): bool {
+    public function set(string $key, mixed $value): bool {
         $this->data[$key] = $value;
         return true;
     }
@@ -49,5 +53,13 @@ final class InstrumentsStorage implements StorageInterface {
      */
     public function getData(): array {
         return $this->data;
+    }
+
+    /**
+     * @param string $key
+     * @return bool
+     */
+    public function has(string $key): bool {
+        return isset($this->data[$key]);
     }
 }
