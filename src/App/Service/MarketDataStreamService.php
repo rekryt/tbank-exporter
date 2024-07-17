@@ -2,35 +2,22 @@
 
 namespace TBank\App\Service;
 
-use Amp\Http\Client\HttpException;
-use Amp\Http\Client\SocketException;
-use Amp\TimeoutCancellation;
-use Amp\Websocket\Client\Rfc6455ConnectionFactory;
-use Amp\Websocket\Client\Rfc6455Connector;
-use Amp\Websocket\Client\WebsocketConnectException;
-use Amp\Websocket\Client\WebsocketConnection;
-use Amp\Websocket\Client\WebsocketHandshake;
-use Amp\Websocket\Parser\Rfc6455ParserFactory;
-use Amp\Websocket\PeriodicHeartbeatQueue;
+use TBank\Infrastructure\Storage\InstrumentsStorage;
+
 use Amp\Websocket\WebsocketClosedException;
-use Closure;
+
 use Monolog\Logger;
 use Revolt\EventLoop;
-use TBank\Infrastructure\Storage\InstrumentsStorage;
-use function Amp\async;
-use function Amp\delay;
-use function TBank\getEnv;
 
-class MarketDataStreamService extends AbstractStreamService {
+final class MarketDataStreamService extends AbstractStreamService {
     private string $path = '/tinkoff.public.invest.api.contract.v1.MarketDataStreamService/MarketDataStream';
-    private Closure $onConnected;
 
     /**
      * @param Logger $logger
      * @param array $tickers
      */
-    public function __construct(private readonly Logger $logger, private readonly array $tickers = []) {
-        $this->onConnected = $onConnected ?? fn() => 0;
+    public function __construct(private Logger $logger, private readonly array $tickers = []) {
+        $this->logger = $this->logger->withName('MarketDataStreamService');
         parent::__construct(
             $this->logger,
             function () {
@@ -48,14 +35,12 @@ class MarketDataStreamService extends AbstractStreamService {
                                 ],
                             ])
                         );
-                        $this->logger->notice('WS ping');
                         break;
                     case isset($payload->lastPrice):
                         $storage->set(
                             $payload->lastPrice->instrumentUid,
                             $payload->lastPrice->price->units + $payload->lastPrice->price->nano / 1000000000
                         );
-                        $this->logger->notice('WS lastPrice');
                         break;
                 }
             }

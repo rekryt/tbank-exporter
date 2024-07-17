@@ -2,6 +2,8 @@
 
 namespace TBank\Infrastructure\API;
 
+use TBank\App\Controller\MainController;
+
 use Amp\ByteStream\BufferException;
 use Amp\ByteStream\StreamException;
 use Amp\Http\Client\HttpException;
@@ -28,10 +30,8 @@ use Monolog\Logger;
 use Psr\Log\LogLevel;
 use Revolt\EventLoop;
 
-use TBank\App\Controller\MainController;
-
-use function Amp\trapSignal;
 use function TBank\getEnv;
+use function Amp\trapSignal;
 
 final class Server {
     private static Server $_instance;
@@ -68,7 +68,7 @@ final class Server {
         $this->logger = $logger ?? new Logger(getEnv('COMPOSE_PROJECT_NAME') ?? 'exporter');
         $logHandler = new StreamHandler(new WritableResourceStream(STDOUT));
         $logHandler->setFormatter(new ConsoleFormatter());
-        $logHandler->setLevel(getEnv('DEBUG') === 'false' ? LogLevel::ERROR : LogLevel::INFO);
+        $logHandler->setLevel(getEnv('DEBUG') === 'false' ? LogLevel::INFO : LogLevel::INFO);
         $this->logger->pushHandler($logHandler);
 
         $serverSocketFactory = new ConnectionLimitingServerSocketFactory(new LocalSemaphore(1024));
@@ -120,6 +120,10 @@ final class Server {
             //    $this->bindContext
             //);
             $this->httpServer->start($this->requestHandler, $this->errorHandler);
+
+            EventLoop::setErrorHandler(function ($e) {
+                $this->logger->error($e->getMessage());
+            });
 
             if (defined('SIGINT') && defined('SIGTERM')) {
                 // Await SIGINT or SIGTERM to be received.

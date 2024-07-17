@@ -3,6 +3,7 @@
 namespace TBank\Infrastructure\Storage;
 
 interface StorageInterface {
-    public function get(string $key): float;
-    public function set(string $key, float $value): bool;
+    public function get(string $key): mixed;
+    public function set(string $key, mixed $value): bool;
+    public function has(string $key): bool;
 }

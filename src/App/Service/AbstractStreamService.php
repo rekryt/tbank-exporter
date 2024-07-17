@@ -4,7 +4,6 @@ namespace TBank\App\Service;
 
 use Amp\Http\Client\HttpException;
 use Amp\Http\Client\SocketException;
-use Amp\TimeoutCancellation;
 use Amp\Websocket\Client\Rfc6455ConnectionFactory;
 use Amp\Websocket\Client\Rfc6455Connector;
 use Amp\Websocket\Client\WebsocketConnectException;
@@ -12,21 +11,22 @@ use Amp\Websocket\Client\WebsocketConnection;
 use Amp\Websocket\Client\WebsocketHandshake;
 use Amp\Websocket\Parser\Rfc6455ParserFactory;
 use Amp\Websocket\PeriodicHeartbeatQueue;
-use Closure;
+
 use Monolog\Logger;
 use Revolt\EventLoop;
-use TBank\Infrastructure\Storage\InstrumentsStorage;
-use function Amp\async;
-use function Amp\delay;
+
+use Closure;
+
 use function TBank\getEnv;
 
-class AbstractStreamService {
+abstract class AbstractStreamService {
     private Rfc6455Connector $wsClient;
     private string $token;
     protected WebsocketConnection $connection;
     private Closure $onConnected;
     private Closure $onMessage;
     private string $listener = '';
+    private string $pinger = '';
 
     /**
      * @param Logger $logger
@@ -40,7 +40,7 @@ class AbstractStreamService {
     ) {
         $this->wsClient = new Rfc6455Connector(
             new Rfc6455ConnectionFactory(
-                heartbeatQueue: new PeriodicHeartbeatQueue(heartbeatPeriod: 30),
+                heartbeatQueue: new PeriodicHeartbeatQueue(heartbeatPeriod: 15),
                 parserFactory: new Rfc6455ParserFactory(messageSizeLimit: PHP_INT_MAX, frameSizeLimit: PHP_INT_MAX)
             )
         );
@@ -56,6 +56,9 @@ class AbstractStreamService {
     public function connect(string $path): void {
         if ($this->listener) {
             EventLoop::cancel($this->listener);
+        }
+        if ($this->pinger) {
+            EventLoop::cancel($this->pinger);
         }
         if (!empty($this->connection) && !$this->connection->isClosed()) {
             $this->connection->close();
@@ -91,5 +94,7 @@ class AbstractStreamService {
                 ($this->onMessage)($payload);
             }
         });
+
+        $this->pinger = EventLoop::repeat(15, fn() => $this->connection->ping());
     }
 }

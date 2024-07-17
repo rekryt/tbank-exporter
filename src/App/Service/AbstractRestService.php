@@ -10,8 +10,9 @@ use Amp\Http\Client\Response;
 use Amp\ByteStream\BufferException;
 use Amp\ByteStream\StreamException;
 
-use Exception;
 use Monolog\Logger;
+
+use Exception;
 
 use function TBank\getEnv;
 
@@ -54,11 +55,13 @@ abstract class AbstractRestService {
         $response = $this->httpClient->request($request);
         $data = $response->getBody()->buffer();
         $responseData = json_decode($data);
+
+        $this->logger->notice($url, [$params]);
+
         if (is_null($responseData)) {
             return $data;
         }
 
-        $this->logger->notice($url, [$params]);
         return $responseData;
     }
 }
