@@ -7,12 +7,14 @@ use Amp\ByteStream\BufferException;
 use Amp\ByteStream\StreamException;
 
 use Monolog\Logger;
+use TBank\Infrastructure\API\App;
 
 final class InstrumentsService extends AbstractRestService {
     private string $path = '/rest/tinkoff.public.invest.api.contract.v1.InstrumentsService/';
+    private ?Logger $logger;
 
-    public function __construct(private Logger $logger) {
-        $this->logger = $this->logger->withName('InstrumentsService');
+    public function __construct() {
+        $this->logger = App::getLogger()->withName('InstrumentsService');
         parent::__construct($this->logger);
     }
 

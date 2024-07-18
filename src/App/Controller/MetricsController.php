@@ -3,7 +3,6 @@
 namespace TBank\App\Controller;
 
 use Amp\ByteStream\BufferException;
-use Amp\ByteStream\StreamException;
 use Amp\Http\Client\HttpException;
 use Amp\Http\HttpStatus;
 use Amp\Http\Server\Request;
@@ -18,64 +17,38 @@ use TBank\App\Service\OrdersStreamService;
 use TBank\Domain\Entity\OrderEntity;
 use TBank\Domain\Factory\AmountFactory;
 use TBank\Domain\Factory\PositionFactory;
+use TBank\Infrastructure\API\App;
 use TBank\Infrastructure\Storage\InstrumentsStorage;
 use TBank\Infrastructure\Storage\MainStorage;
 use TBank\Infrastructure\Storage\OrdersStorage;
 
 use Monolog\Logger;
 
-use function TBank\dbg;
+use Throwable;
 use function TBank\getEnv;
 
-class MainController {
-    private array $services = [];
+class MetricsController extends AbstractController {
     private OrdersStorage $ordersStorage;
     private InstrumentsStorage $instrumentsStorage;
     private MainStorage $mainStorage;
+    private Logger $logger;
 
     /**
-     * @param Logger $logger
+     * @param Request $request
+     * @param array $headers
      * @throws BufferException
-     * @throws StreamException
      * @throws HttpException
+     * @throws Throwable
      */
-    public function __construct(private readonly Logger $logger) {
+    public function __construct(protected Request $request, protected array $headers = []) {
+        parent::__construct($request, $this->headers);
+        $this->logger = App::getLogger();
         // общее хранилище
         $this->mainStorage = MainStorage::getInstance();
         // хранилище котировок
         $this->instrumentsStorage = InstrumentsStorage::getInstance();
         // хранилище заявок
         $this->ordersStorage = OrdersStorage::getInstance();
-
-        $account_id = '2024854739';
-
-        // получение тикеров
-        $this->services[InstrumentsService::class] = new InstrumentsService($this->logger);
-        $instruments = explode('|', getEnv('API_TICKERS') ?? '');
-        $tickers = [];
-        foreach ($instruments as $instrument) {
-            [$ticker, $figi] = explode(':', $instrument);
-            foreach ($this->services[InstrumentsService::class]->findInstrument($figi ?: $ticker) as $result) {
-                if ($result->figi == $figi) {
-                    $tickers[$result->uid] = $result;
-                }
-            }
-        }
-        $this->mainStorage->set('tickers', $tickers);
-        // подписка на тикеры
-        $this->services[MarketDataStreamService::class] = new MarketDataStreamService($this->logger, $tickers);
-
-        // получение портфеля и позиций
-        $this->services[OperationsService::class] = new OperationsService($this->logger, $account_id);
-        // подписка на портфель и позиции
-        $this->services[OperationsStreamService::class] = new OperationsStreamService($this->logger, [$account_id]);
-
-        // получение заявок
-        $this->services[OrdersService::class] = new OrdersService($this->logger, $account_id);
-        // подписка на заявки
-        $this->services[OrdersStreamService::class] = new OrdersStreamService($this->logger, [$account_id]);
-
-        $this->logger->info('Main controller ready', [array_map(fn($item) => $item->ticker, $tickers)]);
     }
 
     /**
@@ -95,7 +68,7 @@ class MainController {
     /**
      * @return string
      */
-    private function getBody(): string {
+    public function getBody(): string {
         $metricsNames = [
             'portfolio' => getEnv('METRICS_PORTFOLIO') ?? 'portfolio',
             'price' => getEnv('METRICS_PRICE') ?? 'price',
@@ -220,10 +193,9 @@ class MainController {
     }
 
     /**
-     * @param Request $request
      * @return Response
      */
-    public function __invoke(Request $request): Response {
+    public function __invoke(): Response {
         return new Response(HttpStatus::OK, ['content-type' => 'text/plain; version=0.0.4'], $this->getBody());
     }
 }

@@ -2,6 +2,7 @@
 
 namespace TBank\App\Service;
 
+use TBank\Infrastructure\API\App;
 use TBank\Infrastructure\Storage\MainStorage;
 
 use Amp\Http\Client\HttpException;
@@ -14,16 +15,16 @@ use Revolt\EventLoop;
 final class OperationsService extends AbstractRestService {
     private string $path = '/rest/tinkoff.public.invest.api.contract.v1.OperationsService/';
     private MainStorage $operationsStorage;
+    private ?Logger $logger;
 
     /**
-     * @param Logger $logger
      * @param string $account_id
      * @throws BufferException
      * @throws HttpException
      * @throws StreamException
      */
-    public function __construct(private Logger $logger, string $account_id) {
-        $this->logger = $this->logger->withName('OperationsService');
+    public function __construct(string $account_id) {
+        $this->logger = App::getLogger()->withName('OperationsService');
         parent::__construct($this->logger);
 
         $this->operationsStorage = MainStorage::getInstance();

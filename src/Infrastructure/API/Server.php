@@ -2,7 +2,7 @@
 
 namespace TBank\Infrastructure\API;
 
-use TBank\App\Controller\MainController;
+use Amp\Http\Server\Router;
 
 use Amp\ByteStream\BufferException;
 use Amp\ByteStream\StreamException;
@@ -15,62 +15,46 @@ use Amp\Http\Server\Driver\SocketClientFactory;
 use Amp\Http\Server\ErrorHandler;
 use Amp\Http\Server\HttpServer;
 use Amp\Http\Server\HttpServerStatus;
-use Amp\Http\Server\RequestHandler\ClosureRequestHandler;
 use Amp\Http\Server\SocketHttpServer;
-use Amp\ByteStream\WritableResourceStream;
-use Amp\Log\ConsoleFormatter;
-use Amp\Log\StreamHandler;
 use Amp\Socket\BindContext;
 use Amp\Sync\LocalSemaphore;
 use Amp\Socket;
 use Amp\CompositeException;
 
-use Dotenv\Dotenv;
 use Monolog\Logger;
-use Psr\Log\LogLevel;
-use Revolt\EventLoop;
+use TBank\App\Service\InstrumentsService;
+use TBank\App\Service\MarketDataStreamService;
+use TBank\App\Service\OperationsService;
+use TBank\App\Service\OperationsStreamService;
+use TBank\App\Service\OrdersService;
+use TBank\App\Service\OrdersStreamService;
+use TBank\App\Service\UsersService;
+use TBank\Infrastructure\Storage\MainStorage;
+use Throwable;
 
 use function TBank\getEnv;
 use function Amp\trapSignal;
 
 final class Server {
     private static Server $_instance;
-    private ClosureRequestHandler $requestHandler;
+    private Router $router;
 
     /**
      * @param ?HttpServer $httpServer
+     * @param ?RouterFactoryInterface $routerFactory
      * @param ?ErrorHandler $errorHandler
      * @param ?BindContext $bindContext
      * @param ?Logger $logger
-     * @throws BufferException
-     * @throws StreamException
-     * @throws HttpException
+     * @throws Throwable
      */
     private function __construct(
         private ?HttpServer $httpServer,
+        private ?RouterFactoryInterface $routerFactory,
         private ?ErrorHandler $errorHandler,
         private ?Socket\BindContext $bindContext,
         private ?Logger $logger
     ) {
-        ini_set('memory_limit', getEnv('SYS_MEMORY_LIMIT') ?? '2048M');
-
-        if (!defined('PATH_ROOT')) {
-            define('PATH_ROOT', dirname(__DIR__, 3));
-        }
-
-        $dotenv = Dotenv::createImmutable(PATH_ROOT);
-        $dotenv->safeLoad();
-
-        if ($timezone = getEnv('SYS_TIMEZONE')) {
-            date_default_timezone_set($timezone);
-        }
-
-        $this->logger = $logger ?? new Logger(getEnv('COMPOSE_PROJECT_NAME') ?? 'exporter');
-        $logHandler = new StreamHandler(new WritableResourceStream(STDOUT));
-        $logHandler->setFormatter(new ConsoleFormatter());
-        $logHandler->setLevel(getEnv('DEBUG') === 'false' ? LogLevel::INFO : LogLevel::INFO);
-        $this->logger->pushHandler($logHandler);
-
+        $this->logger = $logger ?? App::getLogger();
         $serverSocketFactory = new ConnectionLimitingServerSocketFactory(new LocalSemaphore(1024));
         $clientFactory = new ConnectionLimitingClientFactory(new SocketClientFactory($this->logger), $this->logger, 10);
         $this->httpServer =
@@ -84,7 +68,41 @@ final class Server {
         $this->bindContext = $bindContext ?? (new Socket\BindContext())->withoutTlsContext();
         $this->errorHandler = $errorHandler ?? new DefaultErrorHandler();
 
-        $this->requestHandler = new ClosureRequestHandler((new MainController($this->logger))(...));
+        $this->router = ($routerFactory ?: new RouterFactory())->create(
+            $this->httpServer,
+            $this->errorHandler,
+            $this->logger
+        );
+
+        $app = App::getInstance()
+            ->addService(new InstrumentsService())
+            ->addService(new UsersService());
+        $account_id = MainStorage::getInstance()->get('account')->id;
+
+        // получение тикеров
+        /** @var InstrumentsService $instrumentsService */
+        $instrumentsService = $app->getService(InstrumentsService::class);
+        $instruments = explode('|', getEnv('API_TICKERS') ?? '');
+        $tickers = [];
+        foreach ($instruments as $instrument) {
+            [$ticker, $figi] = explode(':', $instrument);
+            foreach ($instrumentsService->findInstrument($figi ?: $ticker) as $result) {
+                if ($result->figi == $figi) {
+                    $tickers[$result->uid] = $result;
+                }
+            }
+        }
+        MainStorage::getInstance()->set('tickers', $tickers);
+
+        $app->addService(new MarketDataStreamService($tickers)) // подписка на тикеры
+            ->addService(new OperationsService($account_id)) // получение портфеля и позиций
+            ->addService(new OperationsStreamService([$account_id])) // подписка на портфель и позиции
+            ->addService(new OrdersService($account_id)) // получение заявок
+            ->addService(
+                new OrdersStreamService([$account_id]) // подписка на заявки
+            );
+
+        $this->logger->info('Ready', [array_values(array_map(fn($item) => $item->ticker, $tickers))]);
     }
 
     /**
@@ -94,15 +112,16 @@ final class Server {
      * @param ?Logger $logger
      * @throws BufferException
      * @throws HttpException
-     * @throws StreamException
+     * @throws Throwable
      */
     public static function getInstance(
         HttpServer $httpServer = null,
+        RouterFactoryInterface $routerFactory = null,
         ErrorHandler $errorHandler = null,
         Socket\BindContext $bindContext = null,
         Logger $logger = null
     ): Server {
-        return self::$_instance ??= new self($httpServer, $errorHandler, $bindContext, $logger);
+        return self::$_instance ??= new self($httpServer, $routerFactory, $errorHandler, $bindContext, $logger);
     }
 
     /**
@@ -119,23 +138,10 @@ final class Server {
             //    new Socket\InternetAddress('[::]', $_ENV['HTTP_PORT'] ?? 8080),
             //    $this->bindContext
             //);
-            $this->httpServer->start($this->requestHandler, $this->errorHandler);
-
-            EventLoop::setErrorHandler(function ($e) {
-                $this->logger->error($e->getMessage());
-            });
-
-            if (defined('SIGINT') && defined('SIGTERM')) {
-                // Await SIGINT or SIGTERM to be received.
-                $signal = trapSignal([SIGINT, SIGTERM]);
-                $this->logger->info(\sprintf('Received signal %d, stopping HTTP server', $signal));
-                $this->httpServer->stop();
-            } else {
-                EventLoop::run();
-            }
+            $this->httpServer->start($this->router, $this->errorHandler);
         } catch (Socket\SocketException | CompositeException $e) {
             $this->logger->warning($e->getMessage());
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $this->logger->error($e->getMessage());
         }
     }

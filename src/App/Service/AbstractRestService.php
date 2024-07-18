@@ -16,7 +16,7 @@ use Exception;
 
 use function TBank\getEnv;
 
-abstract class AbstractRestService {
+abstract class AbstractRestService implements ServiceInterface {
     private HttpClient $httpClient;
     private string $token;
     private string $baseURL;

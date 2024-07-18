@@ -2,6 +2,7 @@
 
 namespace TBank\App\Service;
 
+use TBank\Infrastructure\API\App;
 use TBank\Infrastructure\Storage\InstrumentsStorage;
 
 use Amp\Websocket\WebsocketClosedException;
@@ -11,13 +12,13 @@ use Revolt\EventLoop;
 
 final class MarketDataStreamService extends AbstractStreamService {
     private string $path = '/tinkoff.public.invest.api.contract.v1.MarketDataStreamService/MarketDataStream';
+    private ?Logger $logger;
 
     /**
-     * @param Logger $logger
      * @param array $tickers
      */
-    public function __construct(private Logger $logger, private readonly array $tickers = []) {
-        $this->logger = $this->logger->withName('MarketDataStreamService');
+    public function __construct(private readonly array $tickers = []) {
+        $this->logger = App::getLogger()->withName('MarketDataStreamService');
         parent::__construct(
             $this->logger,
             function () {

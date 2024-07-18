@@ -2,6 +2,7 @@
 
 namespace TBank\App\Service;
 
+use TBank\Infrastructure\API\App;
 use TBank\Infrastructure\Storage\MainStorage;
 
 use Amp\Websocket\WebsocketClosedException;
@@ -11,13 +12,13 @@ use Revolt\EventLoop;
 
 final class OperationsStreamService extends AbstractStreamService {
     private string $path = '/tinkoff.public.invest.api.contract.v1.OperationsStreamService/PortfolioStream';
+    private ?Logger $logger;
 
     /**
-     * @param Logger $logger
      * @param array $accounts
      */
-    public function __construct(private Logger $logger, private readonly array $accounts = []) {
-        $this->logger = $this->logger->withName('OperationsStreamService');
+    public function __construct(private readonly array $accounts = []) {
+        $this->logger = App::getLogger()->withName('OperationsStreamService');
         parent::__construct(
             $this->logger,
             function () {

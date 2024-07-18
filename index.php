@@ -1,7 +1,10 @@
 <?php
 
+use TBank\Infrastructure\API\App;
 use TBank\Infrastructure\API\Server;
 
 require_once 'vendor/autoload.php';
 
-Server::getInstance()->start();
+App::getInstance()
+    ->addHandler((fn(App $app) => Server::getInstance()))
+    ->start();

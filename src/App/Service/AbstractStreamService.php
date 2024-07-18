@@ -19,7 +19,7 @@ use Closure;
 
 use function TBank\getEnv;
 
-abstract class AbstractStreamService {
+abstract class AbstractStreamService implements ServiceInterface {
     private Rfc6455Connector $wsClient;
     private string $token;
     protected WebsocketConnection $connection;

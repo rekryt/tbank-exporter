@@ -3,6 +3,7 @@
 namespace TBank\App\Service;
 
 use TBank\Domain\Factory\OrderFactory;
+use TBank\Infrastructure\API\App;
 use TBank\Infrastructure\Storage\OrdersStorage;
 
 use Amp\Http\Client\HttpException;
@@ -15,9 +16,10 @@ use Revolt\EventLoop;
 final class OrdersService extends AbstractRestService {
     private string $path = '/rest/tinkoff.public.invest.api.contract.v1.OrdersService/';
     private OrdersStorage $ordersStorage;
+    private Logger $logger;
 
-    public function __construct(private Logger $logger, string $account_id) {
-        $this->logger = $this->logger->withName('OrdersService');
+    public function __construct(string $account_id) {
+        $this->logger = App::getLogger()->withName('OrdersService');
         parent::__construct($this->logger);
 
         $this->ordersStorage = OrdersStorage::getInstance();

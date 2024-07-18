@@ -5,6 +5,7 @@ namespace TBank\App\Service;
 use TBank\Domain\Entity\OrderEntity;
 use TBank\Domain\Factory\AmountFactory;
 use TBank\Domain\Factory\OrderFactory;
+use TBank\Infrastructure\API\App;
 use TBank\Infrastructure\Storage\OrdersStorage;
 
 use Amp\Websocket\WebsocketClosedException;
@@ -14,13 +15,13 @@ use Revolt\EventLoop;
 
 final class OrdersStreamService extends AbstractStreamService {
     private string $path = '/tinkoff.public.invest.api.contract.v1.OrdersStreamService/OrderStateStream';
+    private Logger $logger;
 
     /**
-     * @param Logger $logger
      * @param array $accounts
      */
-    public function __construct(private Logger $logger, private readonly array $accounts = []) {
-        $this->logger = $this->logger->withName('OrdersStreamService');
+    public function __construct(private readonly array $accounts = []) {
+        $this->logger = App::getLogger()->withName('OrdersStreamService');
         parent::__construct(
             $this->logger,
             function () {
