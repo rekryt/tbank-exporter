@@ -8,6 +8,8 @@ use Amp\ByteStream\StreamException;
 
 use Monolog\Logger;
 use TBank\Infrastructure\API\App;
+use TBank\Infrastructure\Storage\MainStorage;
+use function TBank\getEnv;
 
 final class InstrumentsService extends AbstractRestService {
     private string $path = '/rest/tinkoff.public.invest.api.contract.v1.InstrumentsService/';
@@ -16,6 +18,20 @@ final class InstrumentsService extends AbstractRestService {
     public function __construct() {
         $this->logger = App::getLogger()->withName('InstrumentsService');
         parent::__construct($this->logger);
+
+        // получение тикеров
+        /** @var InstrumentsService $instrumentsService */
+        $instruments = explode('|', getEnv('API_TICKERS') ?? '');
+        $tickers = [];
+        foreach ($instruments as $instrument) {
+            [$ticker, $figi] = explode(':', $instrument);
+            foreach ($this->findInstrument($figi ?: $ticker) as $result) {
+                if ($result->figi == $figi) {
+                    $tickers[$result->uid] = $result;
+                }
+            }
+        }
+        MainStorage::getInstance()->set('tickers', $tickers);
     }
 
     /**

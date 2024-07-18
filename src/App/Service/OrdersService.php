@@ -4,6 +4,7 @@ namespace TBank\App\Service;
 
 use TBank\Domain\Factory\OrderFactory;
 use TBank\Infrastructure\API\App;
+use TBank\Infrastructure\Storage\MainStorage;
 use TBank\Infrastructure\Storage\OrdersStorage;
 
 use Amp\Http\Client\HttpException;
@@ -18,7 +19,7 @@ final class OrdersService extends AbstractRestService {
     private OrdersStorage $ordersStorage;
     private Logger $logger;
 
-    public function __construct(string $account_id) {
+    public function __construct() {
         $this->logger = App::getLogger()->withName('OrdersService');
         parent::__construct($this->logger);
 
@@ -29,8 +30,8 @@ final class OrdersService extends AbstractRestService {
          * @throws StreamException
          * @throws HttpException
          */
-        $ordersUpdate = function () use ($account_id) {
-            $orders = $this->getOrders($account_id);
+        $ordersUpdate = function () {
+            $orders = $this->getOrders(MainStorage::getInstance()->get('account')->id);
             $this->ordersStorage->setData([]);
             foreach ($orders as $order) {
                 $this->ordersStorage->set($order->orderId, OrderFactory::create($order));

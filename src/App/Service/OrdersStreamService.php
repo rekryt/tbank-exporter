@@ -6,6 +6,7 @@ use TBank\Domain\Entity\OrderEntity;
 use TBank\Domain\Factory\AmountFactory;
 use TBank\Domain\Factory\OrderFactory;
 use TBank\Infrastructure\API\App;
+use TBank\Infrastructure\Storage\MainStorage;
 use TBank\Infrastructure\Storage\OrdersStorage;
 
 use Amp\Websocket\WebsocketClosedException;
@@ -17,15 +18,12 @@ final class OrdersStreamService extends AbstractStreamService {
     private string $path = '/tinkoff.public.invest.api.contract.v1.OrdersStreamService/OrderStateStream';
     private Logger $logger;
 
-    /**
-     * @param array $accounts
-     */
-    public function __construct(private readonly array $accounts = []) {
+    public function __construct() {
         $this->logger = App::getLogger()->withName('OrdersStreamService');
         parent::__construct(
             $this->logger,
             function () {
-                $this->subscription($this->accounts);
+                $this->subscription([MainStorage::getInstance()->get('account')->id]);
             },
             function (object $payload) {
                 $storage = OrdersStorage::getInstance();

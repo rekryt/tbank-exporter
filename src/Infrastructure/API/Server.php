@@ -75,34 +75,17 @@ final class Server {
         );
 
         $app = App::getInstance()
-            ->addService(new InstrumentsService())
-            ->addService(new UsersService());
-        $account_id = MainStorage::getInstance()->get('account')->id;
+            ->addService(new InstrumentsService()) // получение списка тикеров
+            ->addService(new UsersService()) // получение account_id
+            ->addService(new MarketDataStreamService()) // подписка на тикеры
+            ->addService(new OperationsService()) // получение портфеля и позиций
+            ->addService(new OperationsStreamService()) // подписка на портфель и позиции
+            ->addService(new OrdersService()) // получение заявок
+            ->addService(new OrdersStreamService()); // подписка на заявки
 
-        // получение тикеров
-        /** @var InstrumentsService $instrumentsService */
-        $instrumentsService = $app->getService(InstrumentsService::class);
-        $instruments = explode('|', getEnv('API_TICKERS') ?? '');
-        $tickers = [];
-        foreach ($instruments as $instrument) {
-            [$ticker, $figi] = explode(':', $instrument);
-            foreach ($instrumentsService->findInstrument($figi ?: $ticker) as $result) {
-                if ($result->figi == $figi) {
-                    $tickers[$result->uid] = $result;
-                }
-            }
-        }
-        MainStorage::getInstance()->set('tickers', $tickers);
-
-        $app->addService(new MarketDataStreamService($tickers)) // подписка на тикеры
-            ->addService(new OperationsService($account_id)) // получение портфеля и позиций
-            ->addService(new OperationsStreamService([$account_id])) // подписка на портфель и позиции
-            ->addService(new OrdersService($account_id)) // получение заявок
-            ->addService(
-                new OrdersStreamService([$account_id]) // подписка на заявки
-            );
-
-        $this->logger->info('Ready', [array_values(array_map(fn($item) => $item->ticker, $tickers))]);
+        $this->logger->info('Ready', [
+            array_values(array_map(fn($item) => $item->ticker, MainStorage::getInstance()->get('tickers'))),
+        ]);
     }
 
     /**

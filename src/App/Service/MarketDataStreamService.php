@@ -9,20 +9,18 @@ use Amp\Websocket\WebsocketClosedException;
 
 use Monolog\Logger;
 use Revolt\EventLoop;
+use TBank\Infrastructure\Storage\MainStorage;
 
 final class MarketDataStreamService extends AbstractStreamService {
     private string $path = '/tinkoff.public.invest.api.contract.v1.MarketDataStreamService/MarketDataStream';
     private ?Logger $logger;
 
-    /**
-     * @param array $tickers
-     */
-    public function __construct(private readonly array $tickers = []) {
+    public function __construct() {
         $this->logger = App::getLogger()->withName('MarketDataStreamService');
         parent::__construct(
             $this->logger,
             function () {
-                $this->subscribeLastPriceRequest(array_keys($this->tickers));
+                $this->subscribeLastPriceRequest(array_keys(MainStorage::getInstance()->get('tickers')));
             },
             function (object $payload) {
                 $storage = InstrumentsStorage::getInstance();

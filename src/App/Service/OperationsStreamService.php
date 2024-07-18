@@ -14,15 +14,12 @@ final class OperationsStreamService extends AbstractStreamService {
     private string $path = '/tinkoff.public.invest.api.contract.v1.OperationsStreamService/PortfolioStream';
     private ?Logger $logger;
 
-    /**
-     * @param array $accounts
-     */
-    public function __construct(private readonly array $accounts = []) {
+    public function __construct() {
         $this->logger = App::getLogger()->withName('OperationsStreamService');
         parent::__construct(
             $this->logger,
             function () {
-                $this->subscription($this->accounts);
+                $this->subscription([MainStorage::getInstance()->get('account')->id]);
             },
             function (object $payload) {
                 $storage = MainStorage::getInstance();

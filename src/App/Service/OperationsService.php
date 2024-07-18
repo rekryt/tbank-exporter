@@ -18,12 +18,11 @@ final class OperationsService extends AbstractRestService {
     private ?Logger $logger;
 
     /**
-     * @param string $account_id
      * @throws BufferException
      * @throws HttpException
      * @throws StreamException
      */
-    public function __construct(string $account_id) {
+    public function __construct() {
         $this->logger = App::getLogger()->withName('OperationsService');
         parent::__construct($this->logger);
 
@@ -33,8 +32,8 @@ final class OperationsService extends AbstractRestService {
          * @throws StreamException
          * @throws HttpException
          */
-        $ordersUpdate = function () use ($account_id) {
-            $portfolio = $this->getPortfolio($account_id);
+        $ordersUpdate = function () {
+            $portfolio = $this->getPortfolio(MainStorage::getInstance()->get('account')->id);
             $this->operationsStorage->set('portfolio', $portfolio);
         };
         $ordersUpdate();
