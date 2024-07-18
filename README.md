@@ -26,26 +26,26 @@ cp .env.example .env
 API_TOKEN=""
 API_TICKERS="GOLD:BBG00V9V16J8|AKGD:BBG014M8NBM4|TGLD:TCS10A101X50|SBGD:BBG019HZM0H0|GAZP:BBG004730RP0|XAU:BBG0013HGFZ7|GLDRUB_TOM:BBG000VJ5YR4|TMOS:BBG333333333"
 ```
-| Параметр                | Описание                                                                                       | Значение по умолчанию                   |
-|-------------------------|------------------------------------------------------------------------------------------------|-----------------------------------------|
-| HTTP_HOST               | Сетевой интерфейс                                                                              | "0.0.0.0"                               |
-| HTTP_PORT               | Порт                                                                                           | "8080"                                  |
-| HTTP_DOCUMENT_ROOT      | Папка со статическим данными для веб-сервера                                                   | "public"                                |
-| API_URL_REST            | Базовый URL REST API                                                                           | "https://invest-public-api.tinkoff.ru"  |
-| API_URL_WS              | Базовый URL WS API                                                                             | "wss://invest-public-api.tinkoff.ru/ws" |
-| API_TOKEN               | [Токен доступа](https://russianinvestments.github.io/investAPI/token/)                         | ОБЯЗАТЕЛЬНЫЙ ПАРАМЕТР                   |
-| API_TICKERS             | Список финансовых инструментов в формате "TICKER:FIGI" разделённый символом вертикальной черты | "GOLD:BBG00V9V16J8"                     |
-| API_ACCOUNT             | ID аккаунта (если не задано будет взять первый из доступных)                                   | ""                                      |
-| METRICS_PORTFOLIO       | Имя метрики - Портфель                                                                         | "portfolio"                             |
-| METRICS_PRICE           | Имя метрики - Стоимость бумаги                                                                 | "price"                                 |
-| METRICS_ORDER_COUNTS    | Имя метрики - Количество позиций в портфеле                                                    | "order_counts"                          |
-| METRICS_ORDER_TOTALS    | Имя метрики - Стоимость позиций в портфеле                                                     | "order_totals"                          |
-| METRICS_POSITIONS_COUNT | Имя метрики - Количество позиций в заявках                                                     | "positions_count"                       |
-| METRICS_POSITIONS_PRICE | Имя метрики - Стоимость позиций в заявках                                                      | "positions_price"                       |
-| SYS_TIMEZONE            | Частовой пояс                                                                                  | "Europe/Mosco"w                         |
-| SYS_MEMORY_LIMIT        | Максимальный объём памяти                                                                      | "4096M"                                 |
-| DEBUG                   | Режим отладки                                                                                  | "false"                                 |
-| AMP_DEBUG               | Режим отладки EventLoop                                                                        | "false"                                 |
+| Параметр                | Описание                                                                                       | Значение по умолчанию                 |
+|-------------------------|------------------------------------------------------------------------------------------------|---------------------------------------|
+| HTTP_HOST               | Сетевой интерфейс                                                                              | 0.0.0.0                               |
+| HTTP_PORT               | Порт                                                                                           | 8080                                  |
+| HTTP_DOCUMENT_ROOT      | Папка со статическим данными для веб-сервера                                                   | public                                |
+| API_URL_REST            | Базовый URL REST API                                                                           | https://invest-public-api.tinkoff.ru  |
+| API_URL_WS              | Базовый URL WS API                                                                             | wss://invest-public-api.tinkoff.ru/ws |
+| API_TOKEN               | [Токен доступа](https://russianinvestments.github.io/investAPI/token/)                         | ОБЯЗАТЕЛЬНЫЙ ПАРАМЕТР                 |
+| API_TICKERS             | Список финансовых инструментов в формате "TICKER:FIGI" разделённый символом вертикальной черты | GOLD:BBG00V9V16J8                     |
+| API_ACCOUNT             | ID аккаунта (если не задано будет взять первый из доступных)                                   |                                       |
+| METRICS_PORTFOLIO       | Имя метрики - Портфель                                                                         | portfolio                             |
+| METRICS_PRICE           | Имя метрики - Стоимость бумаги                                                                 | price                                 |
+| METRICS_ORDER_COUNTS    | Имя метрики - Количество позиций в портфеле                                                    | order_counts                          |
+| METRICS_ORDER_TOTALS    | Имя метрики - Стоимость позиций в портфеле                                                     | order_totals                          |
+| METRICS_POSITIONS_COUNT | Имя метрики - Количество позиций в заявках                                                     | positions_count                       |
+| METRICS_POSITIONS_PRICE | Имя метрики - Стоимость позиций в заявках                                                      | positions_price                       |
+| SYS_TIMEZONE            | Частовой пояс                                                                                  | Europe/Mosco                          |
+| SYS_MEMORY_LIMIT        | Максимальный объём памяти                                                                      | 4096M                                 |
+| DEBUG                   | Режим отладки                                                                                  | false                                 |
+| AMP_DEBUG               | Режим отладки EventLoop                                                                        | false                                 |
 
 #### API_TOKEN
 - [Документация](https://russianinvestments.github.io/investAPI/token/) о получении токена.
