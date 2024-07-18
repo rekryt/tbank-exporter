@@ -33,6 +33,7 @@ RUN apt-get clean
 COPY ./composer.json /app/
 COPY ./index.php /app/
 COPY ./src /app/src/
+COPY ./public /app/public/
 
 WORKDIR /app
 
