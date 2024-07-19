@@ -76,6 +76,7 @@ class MetricsController extends AbstractController {
             'order_totals' => getEnv('METRICS_ORDER_TOTALS') ?? 'order_totals',
             'positions_count' => getEnv('METRICS_POSITIONS_COUNT') ?? 'positions_count',
             'positions_price' => getEnv('METRICS_POSITIONS_PRICE') ?? 'positions_price',
+            'signal' => getEnv('METRICS_SIGNAL') ?? 'signal',
         ];
         $result = '';
 
@@ -188,6 +189,9 @@ class MetricsController extends AbstractController {
                 );
             }
         }
+
+        // сигналы
+        $result .= $this->getMetric($metricsNames['signal'], $this->mainStorage->get('signals'), 'gauge', 'signal');
 
         return $result;
     }

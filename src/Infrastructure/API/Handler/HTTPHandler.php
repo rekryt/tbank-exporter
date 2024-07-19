@@ -42,8 +42,8 @@ final class HTTPHandler extends Handler implements HTTPHandlerInterface {
                     'code' => $e->getCode(),
                 ]);
                 $response = new Response(
-                    status: $e->getCode(),
-                    headers: $this->headers ?? [],
+                    status: $e->getCode() ?: 500,
+                    headers: $this->headers ?? ['content-type' => 'application/json; charset=utf-8'],
                     body: json_encode(
                         array_merge(
                             ['message' => $e->getMessage(), 'code' => $e->getCode()],

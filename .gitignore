@@ -133,4 +133,4 @@ robots.txt
 sw.*
 
 # Storage
-/storage.json
+/storage*.json

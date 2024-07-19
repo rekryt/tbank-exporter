@@ -1,4 +1,11 @@
 {
+    "name": "tbank/exporter",
+    "authors": [
+        {
+            "name": "Rekryt",
+            "email": "rekrytkw@gmail.com"
+        }
+    ],
     "require": {
         "opencck/server": "v1.0.0",
         "amphp/http-client": "v5.1.0",
@@ -16,14 +23,16 @@
         ],
         "psr-4": {
             "TBank\\": [
-                "src/"
+                "src/",
+                "packages/tbank/trading/src/"
             ]
         }
     },
     "autoload-dev": {
         "psr-4": {
             "TBank\\": [
-                "test/"
+                "test/",
+                "packages/tbank/trading/test/"
             ]
         }
     },
