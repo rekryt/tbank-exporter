@@ -47,11 +47,6 @@ final class MainStorage implements StorageInterface {
 
     public function set(string $key, mixed $value): bool {
         $this->data[$key] = $value;
-        if ($key == 'signals') {
-            App::getInstance()
-                ->getDispatcher()
-                ->dispatch(new SignalEvent());
-        }
         return true;
     }
 

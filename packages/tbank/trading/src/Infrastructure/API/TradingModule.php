@@ -7,20 +7,37 @@ use TBank\App\Event\SignalEvent;
 use Monolog\Logger;
 use Closure;
 use TBank\Infrastructure\Storage\MainStorage;
+use function TBank\getEnv;
 
 class TradingModule implements AppModuleInterface {
     private static TradingModule $_instance;
     private Closure $handler;
+    private MainStorage $storage;
 
     /**
      * @param ?Logger $logger
      */
     private function __construct(private ?Logger $logger) {
         $this->logger = ($logger ?? App::getLogger())->withName('TradingModule');
-        $this->handler = function () {
-            $this->logger->notice('working with signals', [MainStorage::getInstance()->get('signals')]);
+        $this->storage = MainStorage::getInstance();
+        $this->handler = function (SignalEvent $event) {
+            $signals = $this->storage->get('signals');
+            $this->logger->notice('working with signals');
 
-            // todo trading logic
+            if (str_ends_with($event->signalName, '_ENTRY') && !$event->value) {
+                $crossSignalName =
+                    substr($event->signalName, 0, strlen($event->signalName) - 6) . '_CROSS:' . $event->ticker;
+                if (isset($signals[$crossSignalName])) {
+                    $signals[$crossSignalName] =
+                        (getEnv('METRICS_SIGNAL') ?? 'signal') .
+                        '{ticker="' .
+                        $event->ticker .
+                        '",name="' .
+                        $crossSignalName .
+                        '"} ';
+                    $this->storage->set('signals', $signals);
+                }
+            }
         };
     }
 

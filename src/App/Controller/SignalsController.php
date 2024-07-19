@@ -9,6 +9,7 @@ use Amp\Http\Server\Request;
 use Amp\Http\Server\Response;
 
 use Exception;
+use TBank\App\Event\SignalEvent;
 use TBank\App\Service\InstrumentsService;
 use TBank\App\Service\MarketDataStreamService;
 use TBank\App\Service\OperationsService;
@@ -91,6 +92,10 @@ class SignalsController extends AbstractController {
                             $signalName .
                             '"} ' .
                             ($statues[$alert->status] ?? 0);
+
+                        App::getInstance()
+                            ->getDispatcher()
+                            ->dispatch(new SignalEvent($signalName, $ticker, $statues[$alert->status] ?? 0));
                     }
                 }
             }
