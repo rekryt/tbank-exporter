@@ -75,14 +75,14 @@ final class Server implements AppModuleInterface {
         );
 
         $app = App::getInstance()
-//            ->addService(new InstrumentsService()) // получение списка тикеров
-//            ->addService(new UsersService()) // получение account_id
-//            ->addService(new MarketDataStreamService()) // подписка на тикеры
-//            ->addService(new OperationsService()) // получение портфеля и позиций
-//            ->addService(new OperationsStreamService()) // подписка на портфель и позиции
-//            ->addService(new OrdersService()) // получение заявок
-//            ->addService(new OrdersStreamService()); // подписка на заявки
-        ;
+            ->addService(new InstrumentsService()) // получение списка тикеров
+            ->addService(new UsersService()) // получение account_id
+            ->addService(new MarketDataStreamService()) // подписка на тикеры
+            ->addService(new OperationsService()) // получение портфеля и позиций
+            ->addService(new OperationsStreamService()) // подписка на портфель и позиции
+            ->addService(new OrdersService()) // получение заявок
+            ->addService(new OrdersStreamService()); // подписка на заявки
+
         $this->logger->info('Ready', [
             array_values(array_map(fn($item) => $item->ticker, MainStorage::getInstance()->get('tickers'))),
         ]);
