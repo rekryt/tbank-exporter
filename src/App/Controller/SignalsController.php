@@ -65,7 +65,7 @@ class SignalsController extends AbstractController {
     public function getBody(): string {
         $signals = $this->mainStorage->get('signals');
         $data = json_decode($this->request->getBody()->buffer());
-        $this->logger->notice('Signal', $data);
+        $this->logger->notice('Signal', [$data]);
 
         // grafana
         if (isset($data->alerts)) {
