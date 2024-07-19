@@ -16,7 +16,7 @@ final class InstrumentsStorage implements StorageInterface {
     private string $filename = 'storage.json';
 
     private function __construct() {
-        $file = PATH_ROOT . '/' . $this->filename;
+        $file = PATH_ROOT . '/storage/' . $this->filename;
         if (is_file($file)) {
             $this->data = (array) json_decode(file_get_contents($file)) ?? [];
         } else {
