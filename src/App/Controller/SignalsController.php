@@ -75,19 +75,24 @@ class SignalsController extends AbstractController {
             ];
 
             foreach ($data->alerts as $alert) {
-                $signalName = $alert->labels->signal;
-                $ticker = $alert->labels->ticker;
-                if (!$signalName || !$ticker) {
+                if (!($ticker = $alert->labels->ticker)) {
                     throw new Exception('Bad input data', 400);
                 }
-                $signals[$signalName . ':' . $ticker] =
-                    (getEnv('METRICS_SIGNAL') ?? 'signal') .
-                    '{ticker="' .
-                    $ticker .
-                    '",name="' .
-                    $signalName .
-                    '"} ' .
-                    ($statues[$alert->status] ?? 0);
+                foreach ($alert->labels as $key => $label) {
+                    if (str_starts_with($key, 'signal')) {
+                        if (!($signalName = $alert->labels->{$key})) {
+                            throw new Exception('Bad input data', 400);
+                        }
+                        $signals[$signalName . ':' . $ticker] =
+                            (getEnv('METRICS_SIGNAL') ?? 'signal') .
+                            '{ticker="' .
+                            $ticker .
+                            '",name="' .
+                            $signalName .
+                            '"} ' .
+                            ($statues[$alert->status] ?? 0);
+                    }
+                }
             }
         }
 
