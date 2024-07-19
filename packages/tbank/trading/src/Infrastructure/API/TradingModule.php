@@ -25,18 +25,32 @@ class TradingModule implements AppModuleInterface {
             $signals = $this->storage->get('signals');
             $this->logger->notice('working with signals', [$event]);
 
-            if (str_ends_with($event->signalName, '_ENTRY') && !$event->value) {
-                $crossSignalName =
-                    substr($event->signalName, 0, strlen($event->signalName) - 6) . '_CROSS:' . $event->ticker;
-                $signals[$crossSignalName] =
-                    (getEnv('METRICS_SIGNAL') ?? 'signal') .
-                    '{ticker="' .
-                    $event->ticker .
-                    '",name="' .
-                    $event->signalName .
-                    '"} 0';
+            $isEntry = str_ends_with($event->signalName, '_ENTRY');
+            $isCross = str_ends_with($event->signalName, '_CROSS');
+            if ($isEntry || $isCross) {
+                $shortName = substr($event->signalName, 0, strlen($event->signalName) - 6);
+                $exactSignalValue = null;
+                if ($isEntry && !$event->value) {
+                    // если мы выходим из трубки точности
+                    $exactSignalValue = 0;
+                }
+                if ($isCross && str_ends_with($signals[$shortName . '_ENTRY:' . $event->ticker], '1')) {
+                    // если мы пересекаем ноль находясь в трубке точности
+                    $exactSignalValue = $event->value ? 1 : -1;
+                }
+                if (!is_null($exactSignalValue)) {
+                    $signals[$shortName . '_EXACT:' . $event->ticker] =
+                        (getEnv('METRICS_SIGNAL') ?? 'signal') .
+                        '{ticker="' .
+                        $event->ticker .
+                        '",name="' .
+                        $shortName .
+                        '_EXACT' .
+                        '"} ' .
+                        $exactSignalValue;
 
-                $this->storage->set('signals', $signals);
+                    $this->storage->set('signals', $signals);
+                }
             }
         };
     }

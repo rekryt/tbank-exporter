@@ -74,7 +74,7 @@ final class Server implements AppModuleInterface {
             $this->logger
         );
 
-        $app = App::getInstance()
+        App::getInstance()
             ->addService(new InstrumentsService()) // получение списка тикеров
             ->addService(new UsersService()) // получение account_id
             ->addService(new MarketDataStreamService()) // подписка на тикеры
