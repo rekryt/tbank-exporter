@@ -1,0 +1,6 @@
+[
+    {
+        "nane": "SMA603010",
+        "query": "(\n    (avg_over_time((delta(price[60m]) / (price - delta(price[60m])))[5m:5s]) - avg_over_time((delta(price[30m]) / (price - delta(price[30m])))[5m:5s]))\n    + (avg_over_time((delta(price[30m]) / (price - delta(price[30m])))[5m:5s]) - avg_over_time((delta(price[10m]) / (price - delta(price[10m])))[5m:5s]))\n) * 50"
+    }
+]

@@ -84,7 +84,7 @@ final class Server implements AppModuleInterface {
             ->addService(new OrdersStreamService()); // подписка на заявки
 
         $this->logger->info('Ready', [
-            array_values(array_map(fn($item) => $item->ticker, MainStorage::getInstance()->get('tickers'))),
+            array_values(array_map(fn($item) => $item->ticker, MainStorage::getInstance()->getTickers())),
         ]);
     }
 

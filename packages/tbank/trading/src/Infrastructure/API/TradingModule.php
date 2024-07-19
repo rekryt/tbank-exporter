@@ -26,53 +26,40 @@ class TradingModule implements AppModuleInterface {
         $this->logger = ($logger ?? App::getLogger())->withName('TradingModule');
         $this->storage = MainStorage::getInstance();
         $this->handler = function (SignalEvent $event) {
-            $signals = $this->storage->get('signals');
+            $signals = $this->storage->getSignals();
             $this->logger->notice('working with signals', [$event]);
 
-            $isEntry = str_ends_with($event->signalName, '_ENTRY');
-            $isCross = str_ends_with($event->signalName, '_CROSS');
+            $isEntry = str_ends_with($event->signal->name, '_ENTRY');
+            $isCross = str_ends_with($event->signal->name, '_CROSS');
             if ($isEntry || $isCross) {
-                $shortName = substr($event->signalName, 0, strlen($event->signalName) - 6);
+                $shortName = substr($event->signal->name, 0, strlen($event->signal->name) - 6);
                 $exactSignalValue = null;
                 // начальное значение ENTRY
-                if (!isset($signals[$shortName . '_ENTRY:' . $event->ticker])) {
-                    $signals[$shortName . '_ENTRY:' . $event->ticker] = $this->getMetrics(
-                        $shortName . '_ENTRY',
-                        $event->ticker,
-                        '0'
-                    );
+                if (!isset($signals[$shortName . '_ENTRY:' . $event->signal->ticker])) {
+                    $signals[$shortName . '_ENTRY:' . $event->signal->ticker]->value = '0';
                 }
                 // начальное значение EXACT
-                if (!isset($signals[$shortName . '_EXACT:' . $event->ticker])) {
+                if (!isset($signals[$shortName . '_EXACT:' . $event->signal->ticker])) {
                     $exactSignalValue = 0;
-                    $signals[$shortName . '_EXACT:' . $event->ticker] = $this->getMetrics(
-                        $shortName . '_EXACT',
-                        $event->ticker,
-                        '0'
-                    );
+                    $signals[$shortName . '_EXACT:' . $event->signal->ticker]->value = '0';
                 }
                 // если мы выходим из трубки точности
-                if ($isEntry && !$event->value) {
+                if ($isEntry && !$event->signal->value) {
                     $exactSignalValue = 0;
                 }
                 // если мы пересекаем ноль находясь в трубке точности
-                if ($isCross && str_ends_with($signals[$shortName . '_ENTRY:' . $event->ticker], '1')) {
+                if ($isCross && $signals[$shortName . '_ENTRY:' . $event->signal->ticker]->value == '1') {
                     // и если мы в состоянии ожидания
-                    if (str_ends_with($signals[$shortName . '_EXACT:' . $event->ticker], '0')) {
-                        $exactSignalValue = $event->value ? 1 : -1;
+                    if ($signals[$shortName . '_EXACT:' . $event->signal->ticker]->value == '0') {
+                        $exactSignalValue = $event->signal->value ? 1 : -1;
                     } else {
                         // если мы не в состоянии ожидание но пересекаем 0, значит это дребезг в трубке точности, надо ждать
                         $exactSignalValue = 0;
                     }
                 }
                 if (!is_null($exactSignalValue)) {
-                    $signals[$shortName . '_EXACT:' . $event->ticker] = $this->getMetrics(
-                        $shortName . '_EXACT',
-                        $event->ticker,
-                        $exactSignalValue
-                    );
-
-                    $this->storage->set('signals', $signals);
+                    $signals[$shortName . '_EXACT:' . $event->signal->ticker]->value = $exactSignalValue;
+                    $this->storage->setSignals($signals);
                 }
             }
         };

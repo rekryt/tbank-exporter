@@ -14,7 +14,9 @@ use TBank\App\Service\OperationsService;
 use TBank\App\Service\OperationsStreamService;
 use TBank\App\Service\OrdersService;
 use TBank\App\Service\OrdersStreamService;
+use TBank\Domain\Entity\AmountEntity;
 use TBank\Domain\Entity\OrderEntity;
+use TBank\Domain\Entity\SignalEntity;
 use TBank\Domain\Factory\AmountFactory;
 use TBank\Domain\Factory\PositionFactory;
 use TBank\Infrastructure\API\App;
@@ -81,7 +83,7 @@ class MetricsController extends AbstractController {
         $result = '';
 
         // тикеры
-        $tickers = $this->mainStorage->get('tickers');
+        $tickers = $this->mainStorage->getTickers();
         $instruments = [];
         foreach ($this->instrumentsStorage->getData() as $uid => $value) {
             if (!isset($tickers[$uid])) {
@@ -132,30 +134,19 @@ class MetricsController extends AbstractController {
         $result .= $this->getMetric($metricsNames['order_totals'], $orders['totals'], 'gauge', 'order_totals');
 
         // портфель и позиции
-        $portfolio = $this->mainStorage->get('portfolio');
+        $portfolio = $this->mainStorage->getPortfolio();
         $params = []; // параметры портфеля
-        if (isset($portfolio)) {
-            foreach ($portfolio as $key => $data) {
-                if (
-                    in_array($key, [
-                        'totalAmountShares',
-                        'totalAmountBonds',
-                        'totalAmountEtf',
-                        'totalAmountCurrencies',
-                        'totalAmountFutures',
-                        'expectedYield',
-                    ])
-                ) {
-                    $value = AmountFactory::create($data);
-                    $params[] = $metricsNames['portfolio'] . '{label="' . $key . '"} ' . $value->get();
+        if ($portfolio) {
+            foreach ($portfolio as $key => $value) {
+                if ($value instanceof AmountEntity) {
+                    $params[] = $metricsNames['portfolio'] . '{label="' . $key . '"} ' . $value->units;
                 }
             }
             $result .= $this->getMetric($metricsNames['portfolio'], $params, 'gauge', 'portfolio');
 
             if (isset($portfolio->positions)) {
                 $positions = ['count' => [], 'price' => []]; // позиции
-                foreach ($portfolio->positions as $data) {
-                    $position = PositionFactory::create($data);
+                foreach ($portfolio->positions as $position) {
                     $search = array_filter($tickers, fn($item) => $item->figi == $position->figi);
                     if (count($search) || $position->instrumentType == 'currency') {
                         $tickerLabel = isset($search[$position->instrumentUid])
@@ -191,7 +182,17 @@ class MetricsController extends AbstractController {
         }
 
         // сигналы
-        $result .= $this->getMetric($metricsNames['signal'], $this->mainStorage->get('signals'), 'gauge', 'signal');
+        $signals = array_map(
+            fn(SignalEntity $signal) => $metricsNames['signal'] .
+                '{ticker="' .
+                $signal->ticker .
+                '",name="' .
+                $signal->name .
+                '"} ' .
+                $signal->value,
+            $this->mainStorage->getSignals()
+        );
+        $result .= $this->getMetric($metricsNames['signal'], $signals, 'gauge', 'signal');
 
         return $result;
     }

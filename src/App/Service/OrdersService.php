@@ -31,7 +31,7 @@ final class OrdersService extends AbstractRestService {
          * @throws HttpException
          */
         $ordersUpdate = function () {
-            $orders = $this->getOrders(MainStorage::getInstance()->get('account')->id);
+            $orders = $this->getOrders(MainStorage::getInstance()->getAccount()->id);
             $this->ordersStorage->setData([]);
             foreach ($orders as $order) {
                 $this->ordersStorage->set($order->orderId, OrderFactory::create($order));

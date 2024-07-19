@@ -19,6 +19,7 @@ use TBank\App\Service\OrdersStreamService;
 use TBank\Domain\Entity\OrderEntity;
 use TBank\Domain\Factory\AmountFactory;
 use TBank\Domain\Factory\PositionFactory;
+use TBank\Domain\Factory\SignalFactory;
 use TBank\Infrastructure\API\App;
 use TBank\Infrastructure\Storage\InstrumentsStorage;
 use TBank\Infrastructure\Storage\MainStorage;
@@ -64,7 +65,7 @@ class SignalsController extends AbstractController {
      * @throws Exception
      */
     public function getBody(): string {
-        $signals = $this->mainStorage->get('signals');
+        $signals = $this->mainStorage->getSignals();
         $data = json_decode($this->request->getBody()->buffer());
         $this->logger->notice('Signal', [$data]);
 
@@ -84,19 +85,18 @@ class SignalsController extends AbstractController {
                         if (!($signalName = $alert->labels->{$key})) {
                             throw new Exception('Bad input data', 400);
                         }
-                        $signals[$signalName . ':' . $ticker] =
-                            (getEnv('METRICS_SIGNAL') ?? 'signal') .
-                            '{ticker="' .
-                            $ticker .
-                            '",name="' .
-                            $signalName .
-                            '"} ' .
-                            ($statues[$alert->status] ?? 0);
-
-                        $this->mainStorage->set('signals', $signals);
+                        $signal = SignalFactory::create(
+                            (object) [
+                                'name' => $signalName,
+                                'ticker' => $ticker,
+                                'value' => $statues[$alert->status] ?? 0,
+                            ]
+                        );
+                        $signals[$signalName . ':' . $ticker] = $signal;
+                        $this->mainStorage->setSignals($signals);
                         App::getInstance()
                             ->getDispatcher()
-                            ->dispatch(new SignalEvent($signalName, $ticker, $statues[$alert->status] ?? 0));
+                            ->dispatch(new SignalEvent($signal));
                     }
                 }
             }

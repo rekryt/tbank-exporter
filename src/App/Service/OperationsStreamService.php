@@ -2,6 +2,7 @@
 
 namespace TBank\App\Service;
 
+use TBank\Domain\Factory\PortfolioFactory;
 use TBank\Infrastructure\API\App;
 use TBank\Infrastructure\Storage\MainStorage;
 
@@ -19,7 +20,7 @@ final class OperationsStreamService extends AbstractStreamService {
         parent::__construct(
             $this->logger,
             function () {
-                $this->subscription([MainStorage::getInstance()->get('account')->id]);
+                $this->subscription([MainStorage::getInstance()->getAccount()->id]);
             },
             function (object $payload) {
                 $storage = MainStorage::getInstance();
@@ -35,7 +36,7 @@ final class OperationsStreamService extends AbstractStreamService {
                         );
                         break;
                     case isset($payload->portfolio):
-                        $storage->set('portfolio', $payload->portfolio);
+                        $storage->setPortfolio(PortfolioFactory::create($payload->portfolio));
                         break;
                 }
             }

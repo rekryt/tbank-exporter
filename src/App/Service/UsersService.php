@@ -2,6 +2,7 @@
 
 namespace TBank\App\Service;
 
+use TBank\Domain\Factory\AccountFactory;
 use TBank\Infrastructure\API\App;
 use TBank\Infrastructure\Storage\MainStorage;
 
@@ -31,12 +32,13 @@ final class UsersService extends AbstractRestService {
         if (count($accounts) == 0) {
             throw new \Exception('Invalid account');
         }
-        foreach ($accounts as $account) {
+        foreach ($accounts as $accountData) {
+            $account = AccountFactory::create($accountData);
             if ($account->status != 'ACCOUNT_STATUS_OPEN') {
                 continue;
             }
             if (!getEnv('API_ACCOUNT') || getEnv('API_ACCOUNT') == $account->id) {
-                $this->storage->set('account', $account);
+                $this->storage->setAccount($account);
                 break;
             }
         }

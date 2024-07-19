@@ -3,6 +3,7 @@
 namespace TBank\Infrastructure\Storage;
 
 use Revolt\EventLoop;
+use TBank\Domain\Entity\InstrumentEntity;
 use TBank\Infrastructure\API\Server;
 
 final class InstrumentsStorage implements StorageInterface {
@@ -39,7 +40,7 @@ final class InstrumentsStorage implements StorageInterface {
         file_put_contents(PATH_ROOT . '/storage/' . $this->filename, json_encode($this->data));
     }
 
-    public function get(string $key): mixed {
+    public function get(string $key): InstrumentEntity {
         return $this->data[$key];
     }
 
@@ -49,7 +50,7 @@ final class InstrumentsStorage implements StorageInterface {
     }
 
     /**
-     * @return array
+     * @return array<InstrumentEntity>
      */
     public function getData(): array {
         return $this->data;

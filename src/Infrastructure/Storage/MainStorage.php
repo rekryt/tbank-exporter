@@ -3,35 +3,47 @@
 namespace TBank\Infrastructure\Storage;
 
 use Revolt\EventLoop;
-use TBank\App\Event\SignalEvent;
-use TBank\Infrastructure\API\App;
+use TBank\Domain\Entity\AccountEntity;
+use TBank\Domain\Entity\InstrumentEntity;
+use TBank\Domain\Entity\PortfolioEntity;
+use TBank\Domain\Entity\SignalEntity;
+use TBank\Domain\Factory\AccountFactory;
+use TBank\Domain\Factory\InstrumentFactory;
+use TBank\Domain\Factory\PortfolioFactory;
+use TBank\Domain\Factory\SignalFactory;
 use TBank\Infrastructure\API\Server;
+use function TBank\dbg;
 
-final class MainStorage implements StorageInterface {
+final class MainStorage {
     private static MainStorage $_instance;
 
-    private array $data = [
-        'account' => null,
-        'portfolio' => null,
-        'tickers' => [],
-        'signals' => [],
-    ];
+    private ?AccountEntity $account;
+    private ?PortfolioEntity $portfolio;
+    /**
+     * @var array<InstrumentEntity>
+     */
+    private array $tickers;
+
+    /**
+     * @var array<SignalEntity>
+     */
+    private array $signals;
 
     private string $filename = 'storage-main.json';
 
     private function __construct() {
         $file = PATH_ROOT . '/storage/' . $this->filename;
         if (is_file($file)) {
-            $this->data = (array) json_decode(file_get_contents($file)) ?? [
+            $data = (array) json_decode(file_get_contents($file)) ?? [
                 'account' => null,
                 'portfolio' => null,
                 'tickers' => [],
                 'signals' => [],
             ];
-            $this->data['tickers'] = (array) $this->data['tickers'];
-            $this->data['signals'] = (array) $this->data['signals'];
-        } else {
-            $this->data = ['account' => null, 'portfolio' => null, 'tickers' => [], 'signals' => []];
+            $this->account = AccountFactory::create($data['account']);
+            $this->portfolio = PortfolioFactory::create($data['portfolio']);
+            $this->tickers = array_map(fn($item) => InstrumentFactory::create($item), (array) $data['tickers']);
+            $this->signals = array_map(fn($item) => SignalFactory::create($item), (array) $data['signals']);
         }
 
         EventLoop::repeat(60, fn() => $this->save());
@@ -41,24 +53,62 @@ final class MainStorage implements StorageInterface {
         return self::$_instance ??= new self();
     }
 
-    public function get(string $key): mixed {
-        return $this->data[$key];
+    /**
+     * @return ?AccountEntity
+     */
+    public function getAccount(): ?AccountEntity {
+        return $this->account;
     }
 
-    public function set(string $key, mixed $value): bool {
-        $this->data[$key] = $value;
-        return true;
+    /**
+     * @param AccountEntity $account
+     * @return MainStorage
+     */
+    public function setAccount(AccountEntity $account): self {
+        $this->account = $account;
+        return $this;
+    }
+
+    /**
+     * @return ?PortfolioEntity
+     */
+    public function getPortfolio(): ?PortfolioEntity {
+        return $this->portfolio;
+    }
+
+    /**
+     * @param ?PortfolioEntity $portfolio
+     */
+    public function setPortfolio(?PortfolioEntity $portfolio): void {
+        $this->portfolio = $portfolio;
     }
 
     /**
      * @return array
      */
-    public function getData(): array {
-        return $this->data;
+    public function getTickers(): array {
+        return $this->tickers;
     }
 
-    public function setData(array $data): void {
-        $this->data = $data;
+    /**
+     * @param array $tickers
+     */
+    public function setTickers(array $tickers): void {
+        $this->tickers = $tickers;
+    }
+
+    /**
+     * @return array
+     */
+    public function getSignals(): array {
+        return $this->signals;
+    }
+
+    /**
+     * @param array $signals
+     */
+    public function setSignals(array $signals): void {
+        $this->signals = $signals;
     }
 
     /**
@@ -72,6 +122,14 @@ final class MainStorage implements StorageInterface {
     private function save(): void {
         $logger = Server::getLogger()->withName('MainStorage');
         $logger->notice('Background saving');
-        file_put_contents(PATH_ROOT . '/storage/' . $this->filename, json_encode($this->data));
+        file_put_contents(
+            PATH_ROOT . '/storage/' . $this->filename,
+            json_encode([
+                'account' => $this->account,
+                'portfolio' => $this->portfolio,
+                'tickers' => $this->tickers,
+                'signals' => $this->signals,
+            ])
+        );
     }
 }

@@ -7,6 +7,7 @@ use Amp\ByteStream\BufferException;
 use Amp\ByteStream\StreamException;
 
 use Monolog\Logger;
+use TBank\Domain\Factory\InstrumentFactory;
 use TBank\Infrastructure\API\App;
 use TBank\Infrastructure\Storage\MainStorage;
 use function TBank\getEnv;
@@ -15,6 +16,11 @@ final class InstrumentsService extends AbstractRestService {
     private string $path = '/rest/tinkoff.public.invest.api.contract.v1.InstrumentsService/';
     private ?Logger $logger;
 
+    /**
+     * @throws BufferException
+     * @throws HttpException
+     * @throws StreamException
+     */
     public function __construct() {
         $this->logger = App::getLogger()->withName('InstrumentsService');
         parent::__construct($this->logger);
@@ -31,7 +37,7 @@ final class InstrumentsService extends AbstractRestService {
                 }
             }
         }
-        MainStorage::getInstance()->set('tickers', $tickers);
+        MainStorage::getInstance()->setTickers(array_map(fn($item) => InstrumentFactory::create($item), $tickers));
     }
 
     /**

@@ -23,7 +23,7 @@ final class OrdersStreamService extends AbstractStreamService {
         parent::__construct(
             $this->logger,
             function () {
-                $this->subscription([MainStorage::getInstance()->get('account')->id]);
+                $this->subscription([MainStorage::getInstance()->getAccount()->id]);
             },
             function (object $payload) {
                 $storage = OrdersStorage::getInstance();

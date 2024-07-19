@@ -2,6 +2,8 @@
 
 namespace TBank\App\Service;
 
+use TBank\Domain\Factory\AmountFactory;
+use TBank\Domain\Factory\PortfolioFactory;
 use TBank\Infrastructure\API\App;
 use TBank\Infrastructure\Storage\MainStorage;
 
@@ -11,10 +13,11 @@ use Amp\ByteStream\StreamException;
 
 use Monolog\Logger;
 use Revolt\EventLoop;
+use function TBank\dbg;
 
 final class OperationsService extends AbstractRestService {
     private string $path = '/rest/tinkoff.public.invest.api.contract.v1.OperationsService/';
-    private MainStorage $operationsStorage;
+    private MainStorage $storage;
     private ?Logger $logger;
 
     /**
@@ -26,15 +29,15 @@ final class OperationsService extends AbstractRestService {
         $this->logger = App::getLogger()->withName('OperationsService');
         parent::__construct($this->logger);
 
-        $this->operationsStorage = MainStorage::getInstance();
+        $this->storage = MainStorage::getInstance();
         /**
          * @throws BufferException
          * @throws StreamException
          * @throws HttpException
          */
         $ordersUpdate = function () {
-            $portfolio = $this->getPortfolio(MainStorage::getInstance()->get('account')->id);
-            $this->operationsStorage->set('portfolio', $portfolio);
+            $portfolio = $this->getPortfolio($this->storage->getAccount()->id);
+            $this->storage->setPortfolio(PortfolioFactory::create($portfolio));
         };
         $ordersUpdate();
         // авто-обновление портфолио и позиций

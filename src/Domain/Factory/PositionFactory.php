@@ -16,6 +16,8 @@ final class PositionFactory {
             currentPrice: AmountFactory::create($data->currentPrice),
             averagePositionPriceFifo: AmountFactory::create($data->averagePositionPriceFifo),
             quantityLots: AmountFactory::create($data->quantityLots),
+            varMargin: AmountFactory::create($data->varMargin),
+            expectedYieldFifo: AmountFactory::create($data->expectedYieldFifo),
             blocked: !!$data->blocked,
             positionUid: $data->positionUid,
             instrumentUid: $data->instrumentUid

@@ -2,7 +2,9 @@
 
 namespace TBank\App\Event;
 
+use TBank\Domain\Entity\SignalEntity;
+
 class SignalEvent extends AbstractEvent {
-    public function __construct(public string $signalName, public string $ticker, public string|int $value) {
+    public function __construct(public SignalEntity $signal) {
     }
 }
