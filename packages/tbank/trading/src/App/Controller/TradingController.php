@@ -2,10 +2,11 @@
 
 namespace TBank\App\Controller;
 
+use TBank\Infrastructure\Storage\MainStorage;
+
 use Amp\Http\HttpStatus;
 use Amp\Http\Server\Response;
 use Exception;
-use TBank\Infrastructure\Storage\MainStorage;
 
 class TradingController extends AbstractController {
     /**
