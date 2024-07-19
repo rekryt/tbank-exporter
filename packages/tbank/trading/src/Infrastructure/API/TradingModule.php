@@ -7,6 +7,7 @@ use TBank\App\Event\SignalEvent;
 use Monolog\Logger;
 use Closure;
 use TBank\Infrastructure\Storage\MainStorage;
+use function TBank\dbg;
 use function TBank\getEnv;
 
 class TradingModule implements AppModuleInterface {
@@ -27,16 +28,15 @@ class TradingModule implements AppModuleInterface {
             if (str_ends_with($event->signalName, '_ENTRY') && !$event->value) {
                 $crossSignalName =
                     substr($event->signalName, 0, strlen($event->signalName) - 6) . '_CROSS:' . $event->ticker;
-                if (isset($signals[$crossSignalName])) {
-                    $signals[$crossSignalName] =
-                        (getEnv('METRICS_SIGNAL') ?? 'signal') .
-                        '{ticker="' .
-                        $event->ticker .
-                        '",name="' .
-                        $crossSignalName .
-                        '"} ';
-                    $this->storage->set('signals', $signals);
-                }
+                $signals[$crossSignalName] =
+                    (getEnv('METRICS_SIGNAL') ?? 'signal') .
+                    '{ticker="' .
+                    $event->ticker .
+                    '",name="' .
+                    $event->signalName .
+                    '"} 0';
+                dbg($signals, false);
+                $this->storage->set('signals', $signals);
             }
         };
     }

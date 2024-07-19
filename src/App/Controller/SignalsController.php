@@ -93,6 +93,7 @@ class SignalsController extends AbstractController {
                             '"} ' .
                             ($statues[$alert->status] ?? 0);
 
+                        $this->mainStorage->set('signals', $signals);
                         App::getInstance()
                             ->getDispatcher()
                             ->dispatch(new SignalEvent($signalName, $ticker, $statues[$alert->status] ?? 0));
@@ -101,7 +102,7 @@ class SignalsController extends AbstractController {
             }
         }
 
-        return json_encode(['status' => $this->mainStorage->set('signals', $signals)]);
+        return json_encode(['status' => true]);
     }
 
     /**
