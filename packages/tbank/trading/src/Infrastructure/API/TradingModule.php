@@ -35,7 +35,7 @@ class TradingModule implements AppModuleInterface {
                     '",name="' .
                     $event->signalName .
                     '"} 0';
-                dbg($signals, false);
+
                 $this->storage->set('signals', $signals);
             }
         };
