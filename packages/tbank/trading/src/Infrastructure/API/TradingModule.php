@@ -30,13 +30,22 @@ class TradingModule implements AppModuleInterface {
             if ($isEntry || $isCross) {
                 $shortName = substr($event->signalName, 0, strlen($event->signalName) - 6);
                 $exactSignalValue = null;
+                if (!isset($signals[$shortName . '_EXACT:' . $event->ticker])) {
+                    $signals[$shortName . '_EXACT:' . $event->ticker] = 0;
+                }
+                // если мы выходим из трубки точности
                 if ($isEntry && !$event->value) {
-                    // если мы выходим из трубки точности
                     $exactSignalValue = 0;
                 }
+                // если мы пересекаем ноль находясь в трубке точности
                 if ($isCross && str_ends_with($signals[$shortName . '_ENTRY:' . $event->ticker], '1')) {
-                    // если мы пересекаем ноль находясь в трубке точности
-                    $exactSignalValue = $event->value ? 1 : -1;
+                    // и если мы в состоянии ожидания
+                    if (str_ends_with($signals[$shortName . '_EXACT:' . $event->ticker], '0')) {
+                        $exactSignalValue = $event->value ? 1 : -1;
+                    } else {
+                        // если мы не в состоянии ожидание но пересекаем 0, значит это дребезг в трубке точности, надо ждать
+                        $exactSignalValue = 0;
+                    }
                 }
                 if (!is_null($exactSignalValue)) {
                     $signals[$shortName . '_EXACT:' . $event->ticker] =
