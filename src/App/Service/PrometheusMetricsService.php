@@ -68,7 +68,7 @@ final class PrometheusMetricsService extends AbstractRestService {
         };
         $metricsUpdate();
         // авто-обновление метрик из metrics.json
-        // EventLoop::repeat(5, $metricsUpdate);
+        EventLoop::repeat(5, $metricsUpdate);
     }
 
     /**
