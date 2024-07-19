@@ -64,11 +64,6 @@ class SignalsController extends AbstractController {
      */
     public function getBody(): string {
         $signals = $this->mainStorage->get('signals');
-        $signalName = $this->request->getQueryParameter('name');
-        $ticker = $this->request->getQueryParameter('ticker');
-        if (!$signalName || !$ticker) {
-            throw new Exception('Bad input data', 400);
-        }
         $data = json_decode($this->request->getBody()->buffer());
 
         // grafana
@@ -79,6 +74,11 @@ class SignalsController extends AbstractController {
             ];
 
             foreach ($data->alerts as $alert) {
+                $signalName = $alert->labels->signal;
+                $ticker = $alert->labels->ticker;
+                if (!$signalName || !$ticker) {
+                    throw new Exception('Bad input data', 400);
+                }
                 $signals[$signalName . ':' . $ticker] =
                     (getEnv('METRICS_SIGNAL') ?? 'signal') .
                     '{ticker="' .
