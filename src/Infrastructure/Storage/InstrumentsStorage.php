@@ -36,7 +36,7 @@ final class InstrumentsStorage implements StorageInterface {
     private function save(): void {
         $logger = Server::getLogger()->withName('InstrumentsStorage');
         $logger->notice('Background saving');
-        file_put_contents(PATH_ROOT . '/' . $this->filename, json_encode($this->data));
+        file_put_contents(PATH_ROOT . '/storage/' . $this->filename, json_encode($this->data));
     }
 
     public function get(string $key): mixed {

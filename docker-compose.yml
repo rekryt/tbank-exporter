@@ -8,6 +8,8 @@ services:
             - web
         env_file:
             - ./.env
+        volumes:
+            - ./storage/:/app/src/storage/
         logging:
             driver: 'json-file'
             options:

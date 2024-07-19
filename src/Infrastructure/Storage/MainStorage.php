@@ -77,6 +77,6 @@ final class MainStorage implements StorageInterface {
     private function save(): void {
         $logger = Server::getLogger()->withName('MainStorage');
         $logger->notice('Background saving');
-        file_put_contents(PATH_ROOT . '/' . $this->filename, json_encode($this->data));
+        file_put_contents(PATH_ROOT . '/storage/' . $this->filename, json_encode($this->data));
     }
 }

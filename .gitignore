@@ -131,6 +131,3 @@ robots.txt
 
 # Ignore Service Worker
 sw.*
-
-# Storage
-/storage/*.json
