@@ -66,15 +66,11 @@ class TradingModule implements AppModuleInterface {
                     }
                 }
                 if (!is_null($exactSignalValue)) {
-                    $signals[$shortName . '_EXACT:' . $event->ticker] =
-                        (getEnv('METRICS_SIGNAL') ?? 'signal') .
-                        '{ticker="' .
-                        $event->ticker .
-                        '",name="' .
-                        $shortName .
-                        '_EXACT' .
-                        '"} ' .
-                        $exactSignalValue;
+                    $signals[$shortName . '_EXACT:' . $event->ticker] = $this->getMetrics(
+                        $shortName . '_EXACT',
+                        $event->ticker,
+                        $exactSignalValue
+                    );
 
                     $this->storage->set('signals', $signals);
                 }
