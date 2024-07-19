@@ -31,7 +31,7 @@ class TradingModule implements AppModuleInterface {
                 $shortName = substr($event->signalName, 0, strlen($event->signalName) - 6);
                 $exactSignalValue = null;
                 if (!isset($signals[$shortName . '_EXACT:' . $event->ticker])) {
-                    $signals[$shortName . '_EXACT:' . $event->ticker] = 0;
+                    $exactSignalValue = 0;
                 }
                 // если мы выходим из трубки точности
                 if ($isEntry && !$event->value) {
