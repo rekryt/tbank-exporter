@@ -22,7 +22,7 @@ class TradingModule implements AppModuleInterface {
         $this->storage = MainStorage::getInstance();
         $this->handler = function (SignalEvent $event) {
             $signals = $this->storage->get('signals');
-            $this->logger->notice('working with signals');
+            $this->logger->notice('working with signals', [$event]);
 
             if (str_ends_with($event->signalName, '_ENTRY') && !$event->value) {
                 $crossSignalName =
