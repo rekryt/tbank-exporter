@@ -9,7 +9,7 @@ services:
         env_file:
             - ./.env
         volumes:
-            - ./storage/:/app/src/storage/
+            - ./storage/:/app/storage/
         logging:
             driver: 'json-file'
             options:
