@@ -15,6 +15,10 @@ class TradingModule implements AppModuleInterface {
     private Closure $handler;
     private MainStorage $storage;
 
+    private function getMetrics(string $name, string $ticker, string|int $value): string {
+        return (getEnv('METRICS_SIGNAL') ?? 'signal') . '{ticker="' . $ticker . '",name="' . $name . '"} ' . $value;
+    }
+
     /**
      * @param ?Logger $logger
      */
@@ -30,16 +34,22 @@ class TradingModule implements AppModuleInterface {
             if ($isEntry || $isCross) {
                 $shortName = substr($event->signalName, 0, strlen($event->signalName) - 6);
                 $exactSignalValue = null;
+                // начальное значение ENTRY
+                if (!isset($signals[$shortName . '_ENTRY:' . $event->ticker])) {
+                    $signals[$shortName . '_ENTRY:' . $event->ticker] = $this->getMetrics(
+                        $shortName . '_ENTRY',
+                        $event->ticker,
+                        '0'
+                    );
+                }
+                // начальное значение EXACT
                 if (!isset($signals[$shortName . '_EXACT:' . $event->ticker])) {
                     $exactSignalValue = 0;
-                    $signals[$shortName . '_EXACT:' . $event->ticker] =
-                        (getEnv('METRICS_SIGNAL') ?? 'signal') .
-                        '{ticker="' .
-                        $event->ticker .
-                        '",name="' .
-                        $shortName .
-                        '_EXACT' .
-                        '"} 0';
+                    $signals[$shortName . '_EXACT:' . $event->ticker] = $this->getMetrics(
+                        $shortName . '_EXACT',
+                        $event->ticker,
+                        '0'
+                    );
                 }
                 // если мы выходим из трубки точности
                 if ($isEntry && !$event->value) {
