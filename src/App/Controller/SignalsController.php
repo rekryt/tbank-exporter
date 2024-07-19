@@ -92,11 +92,7 @@ class SignalsController extends AbstractController {
                                 'value' => $statues[$alert->status] ?? 0,
                             ]
                         );
-                        $signals[$signalName . ':' . $ticker] = $signal;
-                        $this->mainStorage->setSignals($signals);
-                        App::getInstance()
-                            ->getDispatcher()
-                            ->dispatch(new SignalEvent($signal));
+                        MainStorage::getInstance()->setSignal($signal);
                     }
                 }
             }

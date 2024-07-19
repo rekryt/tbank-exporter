@@ -9,7 +9,9 @@ use Amp\Http\Client\Request;
 use Amp\Http\Client\Response;
 use Exception;
 use Revolt\EventLoop;
+use TBank\App\Event\SignalEvent;
 use TBank\Domain\Factory\OrderFactory;
+use TBank\Domain\Factory\SignalFactory;
 use TBank\Infrastructure\API\App;
 use TBank\Infrastructure\Storage\MainStorage;
 
@@ -20,6 +22,7 @@ use Amp\ByteStream\StreamException;
 use Monolog\Logger;
 use Throwable;
 
+use function TBank\dbg;
 use function TBank\getEnv;
 
 final class PrometheusMetricsService extends AbstractRestService {
@@ -28,9 +31,10 @@ final class PrometheusMetricsService extends AbstractRestService {
     private string $login;
     private string $password;
     private array $metrics;
+    private Logger $logger;
 
-    public function __construct(private Logger $logger) {
-        $this->logger = $this->logger->withName('PrometheusMetricsService');
+    public function __construct() {
+        $this->logger = App::getLogger()->withName('PrometheusMetricsService');
         parent::__construct($this->logger);
 
         $this->httpClient = (new HttpClientBuilder())->build();
@@ -50,18 +54,21 @@ final class PrometheusMetricsService extends AbstractRestService {
          */
         $metricsUpdate = function () {
             foreach ($this->metrics as $metric) {
-                $result = $this->query($metric->query);
-
-            }
-            $orders = $this->getOrders(MainStorage::getInstance()->getAccount()->id);
-            $this->ordersStorage->setData([]);
-            foreach ($orders as $order) {
-                $this->ordersStorage->set($order->orderId, OrderFactory::create($order));
+                foreach ($this->query($metric->query) as $item) {
+                    $signal = SignalFactory::create(
+                        (object) [
+                            'name' => $metric->name,
+                            'ticker' => $item->metric->ticker,
+                            'value' => (float) $item->value[1],
+                        ]
+                    );
+                    MainStorage::getInstance()->setSignal($signal);
+                }
             }
         };
         $metricsUpdate();
         // авто-обновление метрик из metrics.json
-        EventLoop::repeat(5, $metricsUpdate);
+        // EventLoop::repeat(5, $metricsUpdate);
     }
 
     /**
@@ -86,7 +93,6 @@ final class PrometheusMetricsService extends AbstractRestService {
         $request->setBody($form);
 
         $request->setHeader('Authorization', 'Basic ' . base64_encode($this->login . ':' . $this->password));
-        $request->setHeader('Content-type', 'application/json');
         $response = $this->httpClient->request($request);
         $data = $response->getBody()->buffer();
         $responseData = json_decode($data);

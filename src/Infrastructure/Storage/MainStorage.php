@@ -3,6 +3,7 @@
 namespace TBank\Infrastructure\Storage;
 
 use Revolt\EventLoop;
+use TBank\App\Event\SignalEvent;
 use TBank\Domain\Entity\AccountEntity;
 use TBank\Domain\Entity\InstrumentEntity;
 use TBank\Domain\Entity\PortfolioEntity;
@@ -11,6 +12,7 @@ use TBank\Domain\Factory\AccountFactory;
 use TBank\Domain\Factory\InstrumentFactory;
 use TBank\Domain\Factory\PortfolioFactory;
 use TBank\Domain\Factory\SignalFactory;
+use TBank\Infrastructure\API\App;
 use TBank\Infrastructure\API\Server;
 use function TBank\dbg;
 
@@ -105,10 +107,18 @@ final class MainStorage {
     }
 
     /**
-     * @param array $signals
+     * @param SignalEntity $signal
+     * @return void
      */
-    public function setSignals(array $signals): void {
-        $this->signals = $signals;
+    public function setSignal(SignalEntity $signal): void {
+        $signalKey = $signal->name . ':' . $signal->ticker;
+        if (!isset($this->signals[$signalKey]) || $this->signals[$signalKey]->value != $signal->value) {
+            $this->signals[$signal->name . ':' . $signal->ticker] = $signal;
+            // вызов события при изменении сигнала
+            App::getInstance()
+                ->getDispatcher()
+                ->dispatch(new SignalEvent($signal));
+        }
     }
 
     /**

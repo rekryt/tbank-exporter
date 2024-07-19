@@ -28,6 +28,7 @@ use TBank\App\Service\OperationsService;
 use TBank\App\Service\OperationsStreamService;
 use TBank\App\Service\OrdersService;
 use TBank\App\Service\OrdersStreamService;
+use TBank\App\Service\PrometheusMetricsService;
 use TBank\App\Service\UsersService;
 use TBank\Infrastructure\Storage\MainStorage;
 use Throwable;
@@ -81,7 +82,10 @@ final class Server implements AppModuleInterface {
             ->addService(new OperationsService()) // получение портфеля и позиций
             ->addService(new OperationsStreamService()) // подписка на портфель и позиции
             ->addService(new OrdersService()) // получение заявок
-            ->addService(new OrdersStreamService()); // подписка на заявки
+            ->addService(new OrdersStreamService()) // подписка на заявки
+            ->addService(
+                new PrometheusMetricsService() // обновление кастомных метрик из прометеуса
+            );
 
         $this->logger->info('Ready', [
             array_values(array_map(fn($item) => $item->ticker, MainStorage::getInstance()->getTickers())),
