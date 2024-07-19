@@ -2,5 +2,29 @@
     {
         "name": "SMA603010",
         "query": "(\n    (avg_over_time((delta(price[60m]) / (price - delta(price[60m])))[5m:5s]) - avg_over_time((delta(price[30m]) / (price - delta(price[30m])))[5m:5s]))\n    + (avg_over_time((delta(price[30m]) / (price - delta(price[30m])))[5m:5s]) - avg_over_time((delta(price[10m]) / (price - delta(price[10m])))[5m:5s]))\n) * 50"
+    },
+    {
+        "name": "SMA120060030",
+        "query": "(\n    (avg_over_time((delta(price[120m]) / (price - delta(price[120m])))[5m:5s]) - avg_over_time((delta(price[60m]) / (price - delta(price[60m])))[5m:5s]))\n    + (avg_over_time((delta(price[60m]) / (price - delta(price[60m])))[5m:5s]) - avg_over_time((delta(price[30m]) / (price - delta(price[30m])))[5m:5s]))\n) * 50"
+    },
+    {
+        "name": "SMA301505",
+        "query": "(\n    (avg_over_time((delta(price[30m]) / (price - delta(price[30m])))[5m:5s]) - avg_over_time((delta(price[15m]) / (price - delta(price[15m])))[5m:5s]))\n    + (avg_over_time((delta(price[15m]) / (price - delta(price[15m])))[5m:5s]) - avg_over_time((delta(price[5m]) / (price - delta(price[5m])))[5m:5s]))\n) * 50"
+    },
+    {
+        "name": "SMA100501",
+        "query": "(\n    (avg_over_time((delta(price[10m]) / (price - delta(price[10m])))[5m:5s]) - avg_over_time((delta(price[5m]) / (price - delta(price[5m])))[5m:5s]))\n    + (avg_over_time((delta(price[5m]) / (price - delta(price[5m])))[5m:5s]) - avg_over_time((delta(price[1m]) / (price - delta(price[1m])))[5m:5s]))\n) * 50"
+    },
+    {
+        "name": "SMA240060015",
+        "query": "(\n    (avg_over_time((delta(price[240m]) / (price - delta(price[240m])))[5m:5s]) - avg_over_time((delta(price[60m]) / (price - delta(price[60m])))[5m:5s]))\n    + (avg_over_time((delta(price[60m]) / (price - delta(price[60m])))[5m:5s]) - avg_over_time((delta(price[15m]) / (price - delta(price[15m])))[5m:5s]))\n) * 50"
+    },
+    {
+        "name": "SMA180060010",
+        "query": "(\n    (avg_over_time((delta(price[180m]) / (price - delta(price[180m])))[5m:5s]) - avg_over_time((delta(price[60m]) / (price - delta(price[60m])))[5m:5s]))\n    + (avg_over_time((delta(price[60m]) / (price - delta(price[60m])))[5m:5s]) - avg_over_time((delta(price[10m]) / (price - delta(price[10m])))[5m:5s]))\n) * 50"
+    },
+    {
+        "name": "SMA502010",
+        "query": "(\n    (avg_over_time((delta(price[50m]) / (price - delta(price[50m])))[5m:5s]) - avg_over_time((delta(price[20m]) / (price - delta(price[20m])))[5m:5s]))\n    + (avg_over_time((delta(price[20m]) / (price - delta(price[20m])))[5m:5s]) - avg_over_time((delta(price[10m]) / (price - delta(price[10m])))[5m:5s]))\n) * 50"
     }
 ]

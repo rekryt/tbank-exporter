@@ -97,8 +97,6 @@ final class PrometheusMetricsService extends AbstractRestService {
         $data = $response->getBody()->buffer();
         $responseData = json_decode($data);
 
-        $this->logger->notice('query', [$params]);
-
         if (is_null($responseData)) {
             return $data;
         }
