@@ -30,7 +30,6 @@ final class ExactStrategy extends AbstractStrategy {
         $this->logger = App::getLogger()->withName('ExactStrategy');
         $this->storage = MainStorage::getInstance();
         $this->handler = function (SignalEvent $event) {
-            $this->logger->notice(json_encode($event));
             $isEntry = str_ends_with($event->signal->name, '_ENTRY');
             $isCross = str_ends_with($event->signal->name, '_CROSS');
             if ($isEntry || $isCross) {
