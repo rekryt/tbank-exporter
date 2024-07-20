@@ -55,14 +55,11 @@ final class PrometheusMetricsService extends AbstractRestService {
         $metricsUpdate = function () {
             foreach ($this->metrics as $metric) {
                 foreach ($this->query($metric->query) as $item) {
-                    $signal = SignalFactory::create(
-                        (object) [
-                            'name' => $metric->name,
-                            'ticker' => $item->metric->ticker,
-                            'value' => (float) $item->value[1],
-                        ]
+                    MainStorage::getInstance()->setSignal(
+                        $metric->name,
+                        $item->metric->ticker,
+                        (float) $item->value[1]
                     );
-                    MainStorage::getInstance()->setSignal($signal);
                 }
             }
         };

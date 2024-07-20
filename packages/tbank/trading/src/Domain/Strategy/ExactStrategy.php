@@ -6,10 +6,7 @@ use Closure;
 use Monolog\Logger;
 use TBank\App\Event\SignalEvent;
 use TBank\App\Service\PrometheusMetricsService;
-use TBank\Domain\Factory\SignalFactory;
 use TBank\Infrastructure\API\App;
-use TBank\Infrastructure\API\EventDispatcher\EventDispatcher;
-use TBank\Infrastructure\API\TradingModule;
 use TBank\Infrastructure\Storage\MainStorage;
 
 /**
@@ -40,17 +37,9 @@ final class ExactStrategy extends AbstractStrategy {
                 $shortName = substr($event->signal->name, 0, strlen($event->signal->name) - 6);
                 $exactSignalValue = null;
                 // начальное значение EXACT
-                if (!isset($this->storage->getSignals()[$shortName . '_EXACT:' . $event->signal->ticker])) {
+                if (!$this->storage->getSignal($shortName . '_EXACT', $event->signal->ticker)) {
                     $exactSignalValue = 0;
-                    $this->storage->setSignal(
-                        SignalFactory::create(
-                            (object) [
-                                'name' => $shortName . '_EXACT',
-                                'ticker' => $event->signal->ticker,
-                                'value' => 0,
-                            ]
-                        )
-                    );
+                    $this->storage->setSignal($shortName . '_EXACT', $event->signal->ticker, 0);
                 }
                 // если мы выходим из трубки точности
                 if ($isEntry && !$event->signal->value) {
@@ -59,10 +48,10 @@ final class ExactStrategy extends AbstractStrategy {
                 // если мы пересекаем ноль находясь в трубке точности
                 if (
                     $isCross &&
-                    $this->storage->getSignals()[$shortName . '_ENTRY:' . $event->signal->ticker]->value == '1'
+                    $this->storage->getSignal($shortName . '_ENTRY', $event->signal->ticker)->value == '1'
                 ) {
                     // и если мы в состоянии ожидания
-                    if ($this->storage->getSignals()[$shortName . '_EXACT:' . $event->signal->ticker]->value == '0') {
+                    if ($this->storage->getSignal($shortName . '_EXACT', $event->signal->ticker)->value == '0') {
                         $exactSignalValue = $event->signal->value ? 1 : -1;
                     } else {
                         // если мы не в состоянии ожидание но пересекаем 0, значит это дребезг в трубке точности, надо ждать
@@ -70,14 +59,11 @@ final class ExactStrategy extends AbstractStrategy {
                     }
                 }
 
-                $signal = SignalFactory::create(
-                    (object) [
-                        'name' => $shortName . '_EXACT',
-                        'ticker' => $event->signal->ticker,
-                        'value' => $exactSignalValue ?? 0,
-                    ]
+                $signal = $this->storage->setSignal(
+                    $shortName . '_EXACT',
+                    $event->signal->ticker,
+                    $exactSignalValue ?? 0
                 );
-                $this->storage->setSignal($signal);
                 $states = [
                     '-1' => 'SELL',
                     '0' => 'WAIT',

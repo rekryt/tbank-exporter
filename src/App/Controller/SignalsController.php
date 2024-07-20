@@ -2,33 +2,18 @@
 
 namespace TBank\App\Controller;
 
+use TBank\Infrastructure\API\App;
+use TBank\Infrastructure\Storage\MainStorage;
+
 use Amp\ByteStream\BufferException;
 use Amp\Http\Client\HttpException;
 use Amp\Http\HttpStatus;
 use Amp\Http\Server\Request;
 use Amp\Http\Server\Response;
 
-use Exception;
-use TBank\App\Event\SignalEvent;
-use TBank\App\Service\InstrumentsService;
-use TBank\App\Service\MarketDataStreamService;
-use TBank\App\Service\OperationsService;
-use TBank\App\Service\OperationsStreamService;
-use TBank\App\Service\OrdersService;
-use TBank\App\Service\OrdersStreamService;
-use TBank\Domain\Entity\OrderEntity;
-use TBank\Domain\Factory\AmountFactory;
-use TBank\Domain\Factory\PositionFactory;
-use TBank\Domain\Factory\SignalFactory;
-use TBank\Infrastructure\API\App;
-use TBank\Infrastructure\Storage\InstrumentsStorage;
-use TBank\Infrastructure\Storage\MainStorage;
-use TBank\Infrastructure\Storage\OrdersStorage;
-
 use Monolog\Logger;
-
+use Exception;
 use Throwable;
-use function TBank\getEnv;
 
 class SignalsController extends AbstractController {
     private MainStorage $mainStorage;
@@ -65,7 +50,6 @@ class SignalsController extends AbstractController {
      * @throws Exception
      */
     public function getBody(): string {
-        $signals = $this->mainStorage->getSignals();
         $data = json_decode($this->request->getBody()->buffer());
         $this->logger->notice('Signal', [$data]);
 
@@ -85,14 +69,8 @@ class SignalsController extends AbstractController {
                         if (!($signalName = $alert->labels->{$key})) {
                             throw new Exception('Bad input data', 400);
                         }
-                        $signal = SignalFactory::create(
-                            (object) [
-                                'name' => $signalName,
-                                'ticker' => $ticker,
-                                'value' => $statues[$alert->status] ?? 0,
-                            ]
-                        );
-                        MainStorage::getInstance()->setSignal($signal);
+
+                        $this->mainStorage->setSignal($signalName, $ticker, $statues[$alert->status] ?? 0);
                     }
                 }
             }

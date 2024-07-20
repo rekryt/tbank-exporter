@@ -107,18 +107,32 @@ final class MainStorage {
     }
 
     /**
-     * @param SignalEntity $signal
-     * @return void
+     * @param string $name
+     * @param string $ticker
+     * @param float $value
+     * @return SignalEntity
      */
-    public function setSignal(SignalEntity $signal): void {
-        $signalKey = $signal->name . ':' . $signal->ticker;
-        if (!isset($this->signals[$signalKey]) || $this->signals[$signalKey]->value != $signal->value) {
-            $this->signals[$signal->name . ':' . $signal->ticker] = $signal;
+    public function setSignal(string $name, string $ticker, float $value): SignalEntity {
+        $signalKey = $name . ':' . $ticker;
+        $signal = SignalFactory::create(
+            (object) [
+                'name' => $name,
+                'ticker' => $ticker,
+                'value' => $value,
+            ]
+        );
+        if (!isset($this->signals[$signalKey]) || $this->signals[$signalKey]->value != $value) {
+            $this->signals[$name . ':' . $ticker] = $signal;
             // вызов события при изменении сигнала
             App::getInstance()
                 ->getDispatcher()
                 ->dispatch(new SignalEvent($signal));
         }
+        return $signal;
+    }
+
+    public function getSignal(string $name, string $ticker): ?SignalEntity {
+        return $this->signals[$name . ':' . $ticker] ?? null;
     }
 
     /**
