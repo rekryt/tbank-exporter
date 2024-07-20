@@ -36,7 +36,7 @@ final class SMAStrategy extends AbstractStrategy {
         $this->handler = function (SignalEvent $event) {
             if (
                 in_array(substr($event->signal->name, -6), ['_ENTRY', '_CROSS', '_EXACT']) ||
-                str_starts_with($event->signal->name, 'SMA')
+                !str_starts_with($event->signal->name, 'SMA')
             ) {
                 return;
             }
