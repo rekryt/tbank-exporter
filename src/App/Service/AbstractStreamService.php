@@ -17,6 +17,8 @@ use Revolt\EventLoop;
 
 use Closure;
 
+use TBank\App\Event\StreamEvent;
+use TBank\Infrastructure\API\App;
 use function TBank\getEnv;
 
 abstract class AbstractStreamService implements ServiceInterface {
@@ -99,6 +101,9 @@ abstract class AbstractStreamService implements ServiceInterface {
                 $this->lastMessageTime = time();
                 $this->logger->info('WS Received', [$payload]);
                 ($this->onMessage)($payload);
+                App::getInstance()
+                    ->getDispatcher()
+                    ->dispatch(new StreamEvent($payload));
             }
         });
 

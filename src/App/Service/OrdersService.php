@@ -48,6 +48,7 @@ final class OrdersService extends AbstractRestService {
      * @throws BufferException
      * @throws HttpException
      * @throws StreamException
+     * @see OrdersServiceTest::testGetOrders()
      */
     public function getOrders(int|string $account_id): array|false {
         $response = $this->httpRequest($this->path . 'GetOrders', ['account_id' => $account_id]);

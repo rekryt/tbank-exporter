@@ -67,6 +67,7 @@ final class OrdersStreamService extends AbstractStreamService {
      * @param array $accounts
      * @return void
      * @throws WebsocketClosedException
+     * @see OrdersStreamServiceTest::testSubscription()
      */
     public function subscription(array $accounts): void {
         $body = json_encode([

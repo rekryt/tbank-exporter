@@ -50,6 +50,7 @@ final class OperationsService extends AbstractRestService {
      * @throws BufferException
      * @throws HttpException
      * @throws StreamException
+     * @see OperationsServiceTest::testGetPortfolio()
      */
     public function getPortfolio(int|string $account_id): object|false {
         $response = $this->httpRequest($this->path . 'GetPortfolio', ['account_id' => $account_id]);

@@ -47,6 +47,7 @@ final class InstrumentsService extends AbstractRestService {
      * @throws BufferException
      * @throws HttpException
      * @throws StreamException
+     * @see InstrumentsServiceTest::testServiceLoading()
      */
     public function findInstrument(string $query, array $options = []): array|false {
         $response = $this->httpRequest($this->path . 'FindInstrument', array_merge(['query' => $query], $options));

@@ -49,6 +49,7 @@ final class UsersService extends AbstractRestService {
      * @throws BufferException
      * @throws HttpException
      * @throws StreamException
+     * @see UsersServiceTest::testGetAccounts()
      */
     public function getAccounts(): array|false {
         $response = $this->httpRequest($this->path . 'GetAccounts', ['status' => 'ACCOUNT_STATUS_OPEN']);

@@ -110,6 +110,7 @@ final class PrometheusMetricsService extends AbstractRestService {
      * @throws BufferException
      * @throws HttpException
      * @throws StreamException
+     * @see PrometheusMetricsServiceTest::testQuery()
      */
     public function query(string $query): array|false {
         $response = $this->request(['query' => $query]);

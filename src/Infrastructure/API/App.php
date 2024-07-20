@@ -78,7 +78,7 @@ final class App {
      * @param Closure<AppModuleInterface> $handler
      * @return $this
      */
-    public function addHandler(Closure $handler): self {
+    public function addModule(Closure $handler): self {
         $module = $handler($this);
         $this->modules[$module::class] = $module;
         return $this;
@@ -107,7 +107,7 @@ final class App {
             }
             $this->stop();
         } else {
-            if (!$this->isEventLoopStarted) {
+            if (!$this->isEventLoopStarted && !defined('PHPUNIT_COMPOSER_INSTALL')) {
                 $this->isEventLoopStarted = true;
                 EventLoop::run();
             }
@@ -121,17 +121,12 @@ final class App {
     }
 
     /**
-     * @return int
+     * @param string $className
+     * @return void
      */
-    public function getConnectionLimit(): int {
-        return $this->connectionLimit;
-    }
-
-    /**
-     * @return int
-     */
-    public function getConnectionPerIpLimit(): int {
-        return $this->connectionPerIpLimit;
+    public function removeModule(string $className): void {
+        $this->modules[$className]->stop();
+        unset($this->modules[$className]);
     }
 
     /**
