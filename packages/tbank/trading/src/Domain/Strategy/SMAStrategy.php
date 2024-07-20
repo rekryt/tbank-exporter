@@ -39,7 +39,10 @@ final class SMAStrategy extends AbstractStrategy {
         $this->storage = MainStorage::getInstance();
         $this->storage->getSignals()['SMA603010:GOLD']->value = -0.1;
         $this->handler = function (SignalEvent $event) {
-            if (in_array(substr($event->signal->name, -6), ['_ENTRY', '_CROSS', '_EXACT'])) {
+            if (
+                in_array(substr($event->signal->name, -6), ['_ENTRY', '_CROSS', '_EXACT']) ||
+                str_starts_with($event->signal->name, 'SMA')
+            ) {
                 return;
             }
             if (!isset($this->tickers[$event->signal->ticker])) {
