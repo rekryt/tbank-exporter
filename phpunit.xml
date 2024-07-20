@@ -7,16 +7,21 @@
     <coverage>
         <include>
             <directory suffix=".php">./test</directory>
+            <directory suffix=".php">./packages/tbank/trading/test</directory>
         </include>
     </coverage>
     <testsuites>
         <testsuite name="server">
             <directory suffix="Test.php">test</directory>
         </testsuite>
+        <testsuite name="trading">
+            <directory suffix="Test.php">packages/tbank/trading/test</directory>
+        </testsuite>
     </testsuites>
     <php>
-        <env name="AMP_DEBUG" value="true" />
-        <env name="HTTP_DOCUMENT_ROOT" value="" />
+        <env name="HTTP_HOST" value="0.0.0.0" />
         <env name="HTTP_PORT" value="8090" />
+        <env name="HTTP_DOCUMENT_ROOT" value="public" />
+        <env name="AMP_DEBUG" value="true" />
     </php>
 </phpunit>
