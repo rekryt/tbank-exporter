@@ -22,7 +22,7 @@ final class MarketDataStreamService extends AbstractStreamService {
             $this->logger,
             function () {
                 $instrumentIds = array_keys(MainStorage::getInstance()->getTickers());
-                //$this->subscribeLastPriceRequest($instrumentIds);
+                $this->subscribeLastPriceRequest($instrumentIds);
                 $this->subscribeCandlesRequest($instrumentIds);
             },
             function (object $payload) {
