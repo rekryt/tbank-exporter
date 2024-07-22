@@ -10,6 +10,7 @@ use Monolog\Logger;
 use TBank\Domain\Factory\InstrumentFactory;
 use TBank\Infrastructure\API\App;
 use TBank\Infrastructure\Storage\MainStorage;
+use function TBank\dbg;
 use function TBank\getEnv;
 
 final class InstrumentsService extends AbstractRestService {
@@ -33,24 +34,48 @@ final class InstrumentsService extends AbstractRestService {
             [$ticker, $figi] = explode(':', $instrument);
             foreach ($this->findInstrument($figi ?: $ticker) as $result) {
                 if ($result->figi == $figi) {
-                    $tickers[$result->uid] = $result;
+                    $result = $this->getInstrumentBy('INSTRUMENT_ID_TYPE_UID', $result->uid);
+                    $tickers[$result->uid] = InstrumentFactory::create($result);
                 }
             }
         }
-        MainStorage::getInstance()->setTickers(array_map(fn($item) => InstrumentFactory::create($item), $tickers));
+        MainStorage::getInstance()->setTickers($tickers);
     }
 
     /**
      * @param string $query
      * @param array $options
-     * @return array|false
+     * @return ?array
      * @throws BufferException
      * @throws HttpException
      * @throws StreamException
      * @see InstrumentsServiceTest::testServiceLoading()
      */
-    public function findInstrument(string $query, array $options = []): array|false {
+    public function findInstrument(string $query, array $options = []): ?array {
         $response = $this->httpRequest($this->path . 'FindInstrument', array_merge(['query' => $query], $options));
-        return $response ? $response->instruments ?? false : false;
+        return $response ? $response->instruments : null;
+    }
+
+    /**
+     * @param string $id_type
+     * @param string $id
+     * @param ?string| $class_code
+     * @return ?object
+     * @throws BufferException
+     * @throws HttpException
+     * @throws StreamException
+     */
+    public function getInstrumentBy(string $id_type, string $id, ?string $class_code = null): ?object {
+        $response = $this->httpRequest(
+            $this->path . 'GetInstrumentBy',
+            array_merge(
+                [
+                    'id_type' => $id_type,
+                    'id' => $id,
+                ],
+                $class_code ? ['class_code' => $class_code] : []
+            )
+        );
+        return $response ? $response->instrument : null;
     }
 }

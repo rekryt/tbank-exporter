@@ -5,10 +5,8 @@ namespace TBank\Domain\Strategy;
 use Closure;
 use Monolog\Logger;
 use TBank\App\Event\SignalEvent;
-use TBank\App\Service\PrometheusMetricsService;
 use TBank\Infrastructure\API\App;
 use TBank\Infrastructure\API\EventDispatcher\EventDispatcher;
-use TBank\Infrastructure\API\TradingModule;
 
 abstract class AbstractStrategy {
     protected EventDispatcher $dispather;

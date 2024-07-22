@@ -2,20 +2,13 @@
 
 namespace TBank\Infrastructure\API;
 
-use TBank\App\Event\SignalEvent;
-
 use Monolog\Logger;
-use Closure;
-use TBank\Domain\Strategy\ExactStrategy;
-use TBank\Domain\Strategy\SMAStrategy;
 use TBank\Infrastructure\Storage\MainStorage;
-use function TBank\dbg;
 use function TBank\getEnv;
 
-class TradingModule implements AppModuleInterface {
+class TradingModule extends AbstractAppStrategyModule {
     private static TradingModule $_instance;
     private MainStorage $storage;
-    private array $strategies;
 
     private function getMetrics(string $name, string $ticker, string|int $value): string {
         return (getEnv('METRICS_SIGNAL') ?? 'signal') . '{ticker="' . $ticker . '",name="' . $name . '"} ' . $value;
@@ -38,8 +31,6 @@ class TradingModule implements AppModuleInterface {
     }
 
     public function start(): void {
-        // регистрация стратегий (обработчики событий)
-        $this->strategies = [new SMAStrategy(), new ExactStrategy()];
         $this->logger->info('started');
     }
 

@@ -1,5 +1,7 @@
 <?php
 
+use TBank\Domain\Strategy\ExactStrategy;
+use TBank\Domain\Strategy\SMAStrategy;
 use TBank\Infrastructure\API\App;
 use TBank\Infrastructure\API\Server;
 use TBank\Infrastructure\API\TradingModule;
@@ -18,7 +20,11 @@ require_once 'vendor/autoload.php';
 App::getInstance()
     // модули
     ->addModule((fn(App $app) => Server::getInstance())) // веб-сервер
-    ->addModule((fn(App $app) => TradingModule::getInstance())) // модуль стратегий торговли
+    ->addModule(
+        (fn(App $app) => TradingModule::getInstance() // модуль торговли
+            ->addStrategy(new ExactStrategy())
+            ->addStrategy(new SMAStrategy()))
+    )
     // сервисы
     ->addService(new InstrumentsService()) // получение списка тикеров
     ->addService(new UsersService()) // получение account_id

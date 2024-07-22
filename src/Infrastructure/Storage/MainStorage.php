@@ -35,19 +35,17 @@ final class MainStorage {
 
     private function __construct() {
         $file = PATH_ROOT . '/storage/' . $this->filename;
-        if (is_file($file)) {
-            $data = (array) json_decode(file_get_contents($file)) ?? [
-                'account' => null,
-                'portfolio' => null,
-                'tickers' => [],
-                'signals' => [],
-            ];
-            $this->account = AccountFactory::create($data['account']);
-            $this->portfolio = PortfolioFactory::create($data['portfolio']);
-            $this->tickers = array_map(fn($item) => InstrumentFactory::create($item), (array) $data['tickers']);
-            $this->signals = array_map(fn($item) => SignalFactory::create($item), (array) $data['signals']);
-        }
-
+        $default = [
+            'account' => null,
+            'portfolio' => null,
+            'tickers' => [],
+            'signals' => [],
+        ];
+        $data = is_file($file) ? (array) json_decode(file_get_contents($file)) ?? $default : $default;
+        $this->account = AccountFactory::create($data['account'] ?? (object) []);
+        $this->portfolio = PortfolioFactory::create($data['portfolio'] ?? (object) []);
+        $this->tickers = array_map(fn($item) => InstrumentFactory::create($item), (array) $data['tickers']);
+        $this->signals = array_map(fn($item) => SignalFactory::create($item), (array) $data['signals']);
         EventLoop::repeat(60, fn() => $this->save());
     }
 
