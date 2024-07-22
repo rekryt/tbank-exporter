@@ -82,7 +82,7 @@ final class MarketDataStreamService extends AbstractStreamService {
      * @param array $instruments Массив uid инструментов для подписки на свечи.
      * @param string $subscriptionAction Изменение статуса подписки
      * @param string $interval Интервал свечей. Двухчасовые и четырёхчасовые свечи в стриме отсчитываются с 0:00 по UTC.
-     * @param bool $waitingClose Флаг ожидания закрытия временного интервала для отправки свечи.
+     * @param bool $waitingClose Флаг ожидания закрытия временного интервала для отправки свечи, применяется только для минутных свечей.
      * @return void
      * @throws WebsocketClosedException
      */
@@ -90,7 +90,7 @@ final class MarketDataStreamService extends AbstractStreamService {
         array $instruments,
         string $subscriptionAction = 'SUBSCRIPTION_ACTION_SUBSCRIBE',
         string $interval = 'SUBSCRIPTION_INTERVAL_ONE_MINUTE',
-        bool $waitingClose = true
+        bool $waitingClose = false
     ): void {
         $body = json_encode([
             'subscribeCandlesRequest' => [
