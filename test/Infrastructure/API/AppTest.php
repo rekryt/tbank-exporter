@@ -5,6 +5,7 @@ namespace TBank\Infrastructure\API;
 use Amp\PHPUnit\AsyncTestCase;
 use stdClass;
 use TBank\AsyncTest;
+use TBank\Domain\Strategy\AbstractStrategy;
 
 /**
  * @covers \TBank\Infrastructure\API\App

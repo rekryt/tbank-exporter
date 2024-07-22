@@ -15,6 +15,7 @@ use TBank\App\Service\OperationsStreamService;
 use TBank\App\Service\OrdersService;
 use TBank\App\Service\OrdersStreamService;
 use TBank\Domain\Entity\AmountEntity;
+use TBank\Domain\Entity\CandleEntity;
 use TBank\Domain\Entity\OrderEntity;
 use TBank\Domain\Entity\SignalEntity;
 use TBank\Domain\Factory\AmountFactory;
@@ -79,6 +80,7 @@ class MetricsController extends AbstractController {
             'positions_count' => getEnv('METRICS_POSITIONS_COUNT') ?? 'positions_count',
             'positions_price' => getEnv('METRICS_POSITIONS_PRICE') ?? 'positions_price',
             'signal' => getEnv('METRICS_SIGNAL') ?? 'signal',
+            'volume' => getEnv('METRICS_VOLUME') ?? 'volume',
         ];
         $result = '';
 
@@ -193,6 +195,19 @@ class MetricsController extends AbstractController {
             $this->mainStorage->getSignals()
         );
         $result .= $this->getMetric($metricsNames['signal'], $signals, 'gauge', 'signal');
+
+        // обьёмы продаж
+        $volumes = array_map(function (CandleEntity $candle) use ($metricsNames) {
+            $instrument =
+                $this->mainStorage->getTicker($candle->instrumentUid) ??
+                $this->mainStorage->getTickerByFIGI($candle->figi);
+            return $metricsNames['volume'] .
+                '{ticker="' .
+                $instrument->ticker .
+                '"} ' .
+                $candle->volume * $instrument->lot;
+        }, $this->instrumentsStorage->getCandles());
+        $result .= $this->getMetric($metricsNames['volume'], $volumes, 'gauge', 'volume');
 
         return $result;
     }

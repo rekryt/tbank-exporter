@@ -1,5 +1,6 @@
 <?php
 
+use TBank\Domain\Strategy\CandleStrategy;
 use TBank\Domain\Strategy\ExactStrategy;
 use TBank\Domain\Strategy\SMAStrategy;
 use TBank\Infrastructure\API\App;
@@ -19,7 +20,9 @@ require_once 'vendor/autoload.php';
 
 App::getInstance()
     // модули
-    ->addModule((fn(App $app) => Server::getInstance())) // веб-сервер
+    ->addModule((fn(App $app) => Server::getInstance()
+        ->addStrategy(new CandleStrategy())) // обьёмы продаж
+    ) // веб-сервер
     ->addModule(
         (fn(App $app) => TradingModule::getInstance() // модуль торговли
             ->addStrategy(new ExactStrategy())

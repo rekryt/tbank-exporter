@@ -28,7 +28,7 @@ use Throwable;
 use function TBank\getEnv;
 use function Amp\trapSignal;
 
-final class Server extends AbstractAppModule {
+final class Server extends AbstractAppStrategyModule {
     private static Server $_instance;
     private Router $router;
 

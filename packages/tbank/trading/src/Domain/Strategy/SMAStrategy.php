@@ -31,69 +31,74 @@ final class SMAStrategy extends AbstractStrategy {
 
     public function __construct() {
         $this->logger = App::getLogger()->withName('SMAStrategy');
-        $this->storage = MainStorage::getInstance();
-        $this->handler = function (SignalEvent $event) {
-            if (
-                in_array(substr($event->signal->name, -6), ['_ENTRY', '_CROSS', '_EXACT']) ||
-                !str_starts_with($event->signal->name, 'SMA')
-            ) {
-                return;
-            }
-            if (!isset($this->tickers[$event->signal->ticker])) {
-                $this->tickers[$event->signal->ticker] = $event->signal->value;
-                return;
-            }
-
-            if (!$this->storage->getSignal($event->signal->name . '_ENTRY', $event->signal->ticker)) {
-                $this->storage->setSignal($event->signal->name . '_ENTRY', $event->signal->ticker, 0);
-            }
-            // если метрика входит в трубку точности
-            // ENTRY = 1 (можно готовиться торговать)
-            if (
-                $event->signal->value <= $this->precision &&
-                $event->signal->value >= -1 * $this->precision &&
-                $this->storage->getSignal($event->signal->name . '_ENTRY', $event->signal->ticker)->value == 0
-            ) {
-                $this->storage->setSignal($event->signal->name . '_ENTRY', $event->signal->ticker, 1);
-                $this->logger->notice('ENTRY IN', [$event]);
-            }
-            // если метрика выходит из трубки точности
-            // ENTRY = 0 (ждём)
-            if (
-                ($event->signal->value > $this->precision || $event->signal->value < -1 * $this->precision) &&
-                $this->storage->getSignal($event->signal->name . '_ENTRY', $event->signal->ticker)->value == 1
-            ) {
-                $this->storage->setSignal($event->signal->name . '_ENTRY', $event->signal->ticker, 0);
-                $this->logger->notice('ENTRY OUT', [$event]);
-            }
-
-            if (!$this->storage->getSignal($event->signal->name . '_CROSS', $event->signal->ticker)) {
-                $this->storage->setSignal($event->signal->name . '_CROSS', $event->signal->ticker, 0);
-            }
-            // если метрика меньше нуля, а прошлое значение сигнала этой метрики 0
-            // пересекаем сверху CROSS = 1 (покупть)
-            if (
-                $event->signal->value < 0 &&
-                $this->storage->getSignal($event->signal->name . '_CROSS', $event->signal->ticker)->value == 0
-            ) {
-                $this->storage->setSignal($event->signal->name . '_CROSS', $event->signal->ticker, 1);
-                $this->logger->notice('CROSS IN', [$event]);
-            }
-            // если метрика больше нуля, а прошлое значение сигнала этой метрики 1
-            // пересекаем сверху CROSS = 0 (продавать)
-            if (
-                $event->signal->value > 0 &&
-                $this->storage->getSignal($event->signal->name . '_CROSS', $event->signal->ticker)->value == 1
-            ) {
-                $this->storage->setSignal($event->signal->name . '_CROSS', $event->signal->ticker, 0);
-                $this->logger->notice('CROSS OUT', [$event]);
-            }
-        };
         parent::__construct($this->logger);
+
+        $this->storage = MainStorage::getInstance();
+        $this->dispather->addEventListener(SignalEvent::class, $this->signalHandler(...));
+
         $this->logger->notice('loaded');
     }
 
-    function getHandler(): Closure {
-        return $this->handler;
+    public function __destruct() {
+        parent::__destruct();
+        $this->dispather->removeEventListener(SignalEvent::class, $this->signalHandler(...));
+    }
+
+    function signalHandler(SignalEvent $event) {
+        if (
+            in_array(substr($event->signal->name, -6), ['_ENTRY', '_CROSS', '_EXACT']) ||
+            !str_starts_with($event->signal->name, 'SMA')
+        ) {
+            return;
+        }
+        if (!isset($this->tickers[$event->signal->ticker])) {
+            $this->tickers[$event->signal->ticker] = $event->signal->value;
+            return;
+        }
+
+        if (!$this->storage->getSignal($event->signal->name . '_ENTRY', $event->signal->ticker)) {
+            $this->storage->setSignal($event->signal->name . '_ENTRY', $event->signal->ticker, 0);
+        }
+        // если метрика входит в трубку точности
+        // ENTRY = 1 (можно готовиться торговать)
+        if (
+            $event->signal->value <= $this->precision &&
+            $event->signal->value >= -1 * $this->precision &&
+            $this->storage->getSignal($event->signal->name . '_ENTRY', $event->signal->ticker)->value == 0
+        ) {
+            $this->storage->setSignal($event->signal->name . '_ENTRY', $event->signal->ticker, 1);
+            $this->logger->notice('ENTRY IN', [$event]);
+        }
+        // если метрика выходит из трубки точности
+        // ENTRY = 0 (ждём)
+        if (
+            ($event->signal->value > $this->precision || $event->signal->value < -1 * $this->precision) &&
+            $this->storage->getSignal($event->signal->name . '_ENTRY', $event->signal->ticker)->value == 1
+        ) {
+            $this->storage->setSignal($event->signal->name . '_ENTRY', $event->signal->ticker, 0);
+            $this->logger->notice('ENTRY OUT', [$event]);
+        }
+
+        if (!$this->storage->getSignal($event->signal->name . '_CROSS', $event->signal->ticker)) {
+            $this->storage->setSignal($event->signal->name . '_CROSS', $event->signal->ticker, 0);
+        }
+        // если метрика меньше нуля, а прошлое значение сигнала этой метрики 0
+        // пересекаем сверху CROSS = 1 (покупть)
+        if (
+            $event->signal->value < 0 &&
+            $this->storage->getSignal($event->signal->name . '_CROSS', $event->signal->ticker)->value == 0
+        ) {
+            $this->storage->setSignal($event->signal->name . '_CROSS', $event->signal->ticker, 1);
+            $this->logger->notice('CROSS IN', [$event]);
+        }
+        // если метрика больше нуля, а прошлое значение сигнала этой метрики 1
+        // пересекаем сверху CROSS = 0 (продавать)
+        if (
+            $event->signal->value > 0 &&
+            $this->storage->getSignal($event->signal->name . '_CROSS', $event->signal->ticker)->value == 1
+        ) {
+            $this->storage->setSignal($event->signal->name . '_CROSS', $event->signal->ticker, 0);
+            $this->logger->notice('CROSS OUT', [$event]);
+        }
     }
 }

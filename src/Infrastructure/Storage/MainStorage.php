@@ -24,7 +24,12 @@ final class MainStorage {
     /**
      * @var array<InstrumentEntity>
      */
-    private array $tickers;
+    private array $tickers = [];
+
+    /**
+     * @var array<string>
+     */
+    private array $figies = [];
 
     /**
      * @var array<SignalEntity>
@@ -91,10 +96,29 @@ final class MainStorage {
     }
 
     /**
-     * @param array $tickers
+     * @param array<InstrumentEntity> $tickers
      */
     public function setTickers(array $tickers): void {
         $this->tickers = $tickers;
+        foreach ($tickers as $ticker) {
+            $this->figies[$ticker->figi] = $ticker->uid;
+        }
+    }
+
+    /**
+     * @param string $uid
+     * @return ?InstrumentEntity
+     */
+    public function getTicker(string $uid): ?InstrumentEntity {
+        return $this->tickers[$uid] ?? null;
+    }
+
+    /**
+     * @param string $figi
+     * @return ?InstrumentEntity
+     */
+    public function getTickerByFIGI(string $figi): ?InstrumentEntity {
+        return $this->getTicker($this->figies[$figi]);
     }
 
     /**

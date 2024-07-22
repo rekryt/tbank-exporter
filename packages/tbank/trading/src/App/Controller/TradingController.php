@@ -25,6 +25,7 @@ class TradingController extends AbstractController {
                 'portfolio' => $storage->getPortfolio(),
                 'tickers' => $storage->getTickers(),
                 'signals' => $storage->getSignals(),
+                'candles' => InstrumentsStorage::getInstance()->getCandles(),
                 'instruments' => InstrumentsStorage::getInstance()->getData(),
             ],
             JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE
